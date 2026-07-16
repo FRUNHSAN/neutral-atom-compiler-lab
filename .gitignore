@@ -22,6 +22,9 @@ results/*.csv
 zap-source/
 baselines/
 
+# Papers (PDFs are large binaries)
+docs/papers/
+
 # OS
 .DS_Store
 Thumbs.db
