@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nac-lab"
+version = "0.1.0"
+description = "Neutral Atom Compiler Laboratory — decision point analysis for quantum compilers"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "networkx>=3.0",
+]
+
+[project.optional-dependencies]
+zap = [
+    "qiskit>=1.0",
+    "matplotlib>=3.7",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
