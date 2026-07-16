@@ -21,8 +21,9 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "domain", "formulas"))
 from nac_lab.bridges import BRIDGES, list_bridges
-from nac_lab.fidelity import DEFAULT_PARAMS
+from fidelity import DEFAULT_PARAMS
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -136,7 +137,8 @@ def run_synthetic_bridge_swap():
     This is the standalone mode (no ZAP source needed).
     Uses the validated fidelity model directly.
     """
-    from nac_lab.adapter import ZAPKeepVsMoveAdapter
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "instances", "ZAP"))
+    from adapter import ZAPKeepVsMoveAdapter
 
     print("=" * 64)
     print("  Six-Bridge Swap Experiment (Synthetic Mode)")

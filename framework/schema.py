@@ -43,6 +43,16 @@ class ResolveFn(str, Enum):
     SOLVER = "solver"
 
 
+class BridgeMode(str, Enum):
+    INDEPENDENT = "independent"   # 逐项独立决策
+    COUPLED = "coupled"           # 联合优化（需外部求解器）
+
+
+class BridgeLayer(str, Enum):
+    DECLARATION = "declaration"   # 域级: 只声明张力存在, 不包含解法
+    INSTANCE = "instance"         # 实例级: 包含具体解法
+
+
 @dataclass
 class Constraint:
     id: str
@@ -83,7 +93,10 @@ class Bridge:
     source: str
     target: str
     mediation: str
-    resolve_fn: ResolveFn
+    resolve_fn: ResolveFn | None = None      # None for declaration bridges
+    mode: BridgeMode = BridgeMode.INDEPENDENT
+    layer: BridgeLayer = BridgeLayer.INSTANCE
+    declares: str = ""                        # instance → declaration ref
     coupled: bool = False
     solver_timeout_ms: int = 50
     solver_fallback: str = ""

@@ -4,7 +4,9 @@ source: L_stay
 target: L_move
 mediation: "compare crosstalk vs transport+decoherence per idle qubit"
 resolve_fn: solver
-coupled: true
+mode: coupled
+layer: instance
+declares: ""
 solver_timeout_ms: 50
 solver_fallback: per_qubit
 domain_tags: [quantum-compiler]

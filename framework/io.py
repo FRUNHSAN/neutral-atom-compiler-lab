@@ -6,7 +6,7 @@ import yaml
 from pathlib import Path
 from framework.schema import (
     Constraint, Boundary, Bridge, CostTerm,
-    Stage, Rigidity, BridgeType, ResolveFn,
+    Stage, Rigidity, BridgeType, ResolveFn, BridgeMode, BridgeLayer,
 )
 
 
@@ -52,13 +52,17 @@ def load_boundary(yaml_path: str) -> Boundary:
 
 def load_bridge(yaml_path: str) -> Bridge:
     d = load_yaml(yaml_path)
+    resolve_fn = d.get("resolve_fn", None)
     return Bridge(
         id=d["id"],
         type=BridgeType(d.get("type", "tension")),
         source=d.get("source", ""),
         target=d.get("target", ""),
         mediation=d.get("mediation", ""),
-        resolve_fn=ResolveFn(d.get("resolve_fn", "compare")),
+        resolve_fn=ResolveFn(resolve_fn) if resolve_fn else None,
+        mode=BridgeMode(d.get("mode", "independent")),
+        layer=BridgeLayer(d.get("layer", "instance")),
+        declares=d.get("declares", ""),
         coupled=d.get("coupled", False),
         solver_timeout_ms=d.get("solver_timeout_ms", 50),
         solver_fallback=d.get("solver_fallback", ""),

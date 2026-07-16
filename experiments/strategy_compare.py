@@ -17,9 +17,10 @@ import os
 import random
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
-from nac_lab.adapter import ZAPKeepVsMoveAdapter
-from nac_lab.fidelity import DEFAULT_PARAMS
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "domain", "formulas"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "instances", "ZAP"))
+from fidelity import DEFAULT_PARAMS
+from adapter import ZAPKeepVsMoveAdapter
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")

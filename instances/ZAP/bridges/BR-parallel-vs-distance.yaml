@@ -4,5 +4,7 @@ source: C-qc-bandwidth
 target: C-qc-transport
 mediation: "score = λ_par × conflicts + distance — parallelism priority vs movement cost"
 resolve_fn: weighted
-coupled: false
+mode: independent
+layer: instance
+declares: ""
 domain_tags: [quantum-compiler]

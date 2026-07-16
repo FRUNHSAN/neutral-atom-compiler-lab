@@ -1,0 +1,27 @@
+# 等效声明 — ZAP vs ZAC keep-vs-move on qft_n10
+#
+# 四元组: (approaches, constraint, ruler, conditions)
+# 等效定义: |delta| < ruler.tolerance.equivalent
+#
+ruler: "../protocol.yaml"
+constraint: "C-qc-crosstalk"
+
+under_conditions:
+  structured:
+    n_qubits: 10
+    CZ_count: 90
+    stages: 69
+  free_text: "lookahead routing strategy, default architecture"
+
+approaches:
+  - instance: "ZAP"
+    bridge: "BR-keep-vs-move"
+  - instance: "ZAC"
+    bridge: null
+    note: "implicit in SA cost function — no explicit keep-vs-move bridge"
+
+result:
+  ZAP_fidelity: 0.508767
+  ZAC_fidelity: null        # null = 待跑
+  delta: null
+  equivalent: null          # |delta| < ruler.tolerance.equivalent → true

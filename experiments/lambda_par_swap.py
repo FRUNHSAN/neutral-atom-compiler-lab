@@ -19,7 +19,8 @@ import json
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
-from nac_lab.fidelity import DEFAULT_PARAMS
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "domain", "formulas"))
+from fidelity import DEFAULT_PARAMS
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")

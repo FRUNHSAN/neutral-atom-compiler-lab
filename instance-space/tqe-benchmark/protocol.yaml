@@ -1,0 +1,58 @@
+# protocol.yaml — TQE Benchmark 实例空间
+#
+# 三要素:
+#   conventions — 环境参数 + 运行规则（"餐厅里有炸锅、洗碗机"）
+#   ruler       — 量化标准（"厨房吞吐量 = 完成订单数/小时"）
+#   constraint  — 无尺子 = 不是实例空间, 只是场景描述
+#
+id: tqe-benchmark
+description: "ZAP IEEE TQE 2026 paper benchmark suite — 14 circuits, Eq.4 fidelity"
+
+conventions:
+  parameters:
+    measured:
+      R_blockade: 4.3          # μm, Rb n=70
+      T2: 1.5e6                # μs, Bluvstein 2024
+      f_tr: 0.999              # Bluvstein 2024
+      f2: 0.995                # two-qubit gate fidelity
+    assumed:
+      f1_formula: "near-unit (0.9997)"
+      f2q_idle_formula: "1 - (1-f2)/2"    # conservative approximation
+      transport_model: "symmetric-acceleration (ZAP Eq.5)"
+      decoherence_model: "exponential"
+
+  rules:
+    - "global Rydberg laser covers entanglement zone"
+    - "SLM generates static traps in storage zone"
+    - "AOD moves atoms along rows/columns — no diagonal moves"
+    - "atoms are identical (Rb-87)"
+
+ruler:
+  metric: "total_fidelity"
+  formula_ref: "domain/formulas/fidelity.py::breakdown"
+  model: "exponential"          # ZAP default; Enola uses "linear"
+  tolerance:
+    equivalent: 0.001            # |delta| < 0.001 → equivalent
+    notable: 0.01                # |delta| > 0.01 → notable difference
+  comparator: "absolute_diff"
+  breakdown_channels:
+    - cir_fidelity_2q_gate
+    - cir_fidelity_2q_gate_for_idle
+    - cir_fidelity_atom_transfer
+    - cir_fidelity_coherence
+
+benchmarks:
+  - tqe/qft_n10.qasm
+  - tqe/ising_n26.qasm
+  - tqe/ghz_n30.qasm
+  - tqe/qram_n20.qasm
+  - tqe/adder_n4.qasm
+  - tqe/qaoa_n6.qasm
+  - tqe/sat_n11.qasm
+  - tqe/bv_n14.qasm
+  - tqe/multiplier_n15.qasm
+  - tqe/qnn_n15.qasm
+  - tqe/vqc_n15.qasm
+  - tqe/knn_n25.qasm
+  - tqe/wstate_n27.qasm
+  - tqe/cat_n35.qasm
