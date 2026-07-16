@@ -1,0 +1,20 @@
+# 受控领域词汇表 — 量子编译器域
+domains:
+  quantum-compiler:
+    description: "量子编译器 — 逻辑电路到物理硬件的映射"
+  neutral-atom:
+    description: "中性原子量子计算 — 光镊阵列 + 里德堡阻塞"
+  connectivity:
+    description: "比特间的物理连通性约束"
+  crosstalk:
+    description: "非目标比特的意外激发"
+  transport:
+    description: "原子在存储区和纠缠区之间的物理搬运"
+  fidelity:
+    description: "编译后电路的总保真度"
+  scheduling:
+    description: "门执行的时间调度"
+  routing:
+    description: "原子搬运的路径规划"
+  placement:
+    description: "原子在纠缠区中的坑位分配"

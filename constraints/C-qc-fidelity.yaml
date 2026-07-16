@@ -1,0 +1,14 @@
+id: C-qc-fidelity
+name: "电路保真度约束"
+stage: implemented
+formal: |
+  总保真度 ≡ 五个独立错误通道的乘积(Eq 4, ZAP/ZAC/Enola 共享):
+    F = (f1)^g1 · (f2)^g2 · (f_xtalk)^Nxtalk · (f_tr)^Ntr · ∏_q exp(-t_q/T2)
+
+  编译器可优化的通道: f_xtalk, f_tr, T2(仅后三项).
+  f1, f2 由硬件决定, 编译器无法改变.
+rigidity: hard
+domain_tags: [quantum-compiler]
+G(C): 0.8
+derives_from: [C-qc-crosstalk, C-qc-transport, C-qc-decoherence, C-qc-connectivity, C-qc-bandwidth, C-qc-depth]
+status: active

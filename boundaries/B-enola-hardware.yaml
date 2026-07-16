@@ -1,0 +1,34 @@
+id: B-enola-hardware
+constraint: C-qc-fidelity
+implements_formal: "F = product of five error channels"
+stage: implemented
+domain_tags: [quantum-compiler]
+assumptions:
+  - "单区架构——无存储/纠缠分区, 所有原子暴露于同一全局激光"
+  - "idle qubits 在每次 Rydberg stage 被 crosstalk 影响"
+  - "f2q_idle = 1 - (1-f2)/2 (保守近似)"
+  - "T2 = 1.5e6 μs (Rb 原子, Bluvstein 2024)"
+  - "搬运保真度 f_tr = 0.999 (实验级参数)"
+
+cost_terms:
+  L_2q_gate:
+    formula: "g2 * (-ln f2)"
+    params: {f2: 0.995}
+    description: "双比特门错误——硬件决定, 编译器不优化"
+  L_xtalk:
+    formula: "N_idle * (-ln f2q_idle)"
+    params: {f2q_idle: 0.9975}
+    description: "串扰——每 Rydberg stage 空闲比特暴露损失"
+  L_transfer:
+    formula: "N_tr * (-ln f_tr)"
+    params: {f_tr: 0.999}
+    description: "原子搬运——SLM-AOD 转乘损失"
+  L_decoherence:
+    formula: "sum(t_idle_q) / T2"
+    params: {T2: 1.5e6}
+    description: "退相干——比特闲置时间的指数衰减(线性近似)"
+
+cost_groups:
+  hardware_fixed: [L_2q_gate]
+  compiler_optimizable: [L_xtalk, L_transfer, L_decoherence]
+  total: [L_2q_gate, L_xtalk, L_transfer, L_decoherence]

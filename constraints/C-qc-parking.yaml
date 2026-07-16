@@ -1,0 +1,14 @@
+id: C-qc-parking
+name: "搬运parking约束"
+stage: implemented
+formal: |
+  原子轨迹不可重叠: ∀t, ∀a≠b: pos_a(t) != pos_b(t)
+  parking 位移 = 临时靠边让路, 主搬运结束后复原.
+
+  两个原子同行但目标行不同 → 不能同时搬正面相撞
+  → 上方原子先横移一格(parking) → 两路并进 → 到达后下方归位.
+rigidity: hard
+domain_tags: [quantum-compiler]
+G(C): 0.7
+derives_from: [C-qc-aod-routing]
+status: active

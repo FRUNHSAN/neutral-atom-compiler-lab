@@ -1,0 +1,14 @@
+id: C-qc-bandwidth
+name: "AOD并行带宽约束"
+stage: implemented
+formal: |
+  并行搬运数 ≤ AOD 通道数: N_parallel_moves ≤ N_AOD_channels.
+  每个 AOD 通道一次只能搬运一个行/列.
+
+  物理根: AOD 由有限个射频通道驱动, 每通道独立控制一行或一列.
+  多 AOD 场景: N_AOD 个独立通道组, 每组有自己的行列约束.
+rigidity: hard
+domain_tags: [quantum-compiler]
+G(C): 0.8
+derives_from: [C-qc-aod-routing]
+status: active

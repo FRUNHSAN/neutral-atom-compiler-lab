@@ -1,0 +1,10 @@
+id: BR-keep-vs-move
+type: tension
+source: L_stay
+target: L_move
+mediation: "compare crosstalk vs transport+decoherence per idle qubit"
+resolve_fn: solver
+coupled: true
+solver_timeout_ms: 50
+solver_fallback: per_qubit
+domain_tags: [quantum-compiler]

@@ -1,0 +1,15 @@
+id: C-qc-aod-routing
+name: "AOD行列路由约束"
+stage: implemented
+formal: |
+  同列原子步调一致: ∀a,b ∈ same_row: sign(dx_a) == sign(dx_b)
+  同列原子步调一致: ∀a,b ∈ same_col: sign(dy_a) == sign(dy_b)
+  轨迹不冲突: ∀a≠b: trajectory(a) ∩ trajectory(b) = ∅
+
+  物理根: AOD 声光偏转器的多频控制——每行/列共享一个射频通道,
+  不能同时产生两个方向的位移。
+rigidity: hard
+domain_tags: [quantum-compiler]
+G(C): 0.8
+derives_from: []
+status: active

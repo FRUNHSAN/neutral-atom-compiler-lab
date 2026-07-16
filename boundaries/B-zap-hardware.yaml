@@ -1,0 +1,29 @@
+id: B-zap-hardware
+constraint: C-qc-crosstalk
+implements_formal: "idle atoms not exposed to Rydberg laser"
+stage: implemented
+domain_tags: [quantum-compiler]
+assumptions:
+  - "纠缠区有固定数量 slot pairs(spacing: intra-pair 4um, inter-pair 6um)"
+  - "AOD 只能沿行/列移动, 同行原子同向, 不能斜走"
+  - "原子不能重叠在同一 slot"
+  - "搬运保真度 f_tr ≈ 0.999 (near-unit, Bluvstein 2024)"
+  - "T2 = 1.5s (Rb 原子实验参数)"
+
+cost_terms:
+  L_xtalk:
+    formula: "k * (-ln f_2q_idle)"
+    params: {f_2q_idle: 0.9995}
+    description: "空闲比特留在纠缠区的串扰损失"
+  L_tr:
+    formula: "n_tr * (-ln f_tr)"
+    params: {f_tr: 0.999}
+    description: "SLM-AOD 转乘损失 (n_tr ∈ {2, 4})"
+  L_dec:
+    formula: "alpha * (N_q - 1) * t_extra / T2"
+    params: {alpha: 1.0, T2: 1.5}
+    description: "搬运额外时间导致的退相干损失"
+
+cost_groups:
+  L_stay: [L_xtalk]
+  L_move: [L_tr, L_dec]

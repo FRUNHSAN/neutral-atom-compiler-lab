@@ -1,0 +1,14 @@
+id: C-qc-depth
+name: "电路深度最小化"
+stage: implemented
+formal: |
+  最小化电路深度(目标函数, 非硬约束):
+    minimize depth(P) = 逻辑 stage 数.
+
+  tension with C-qc-transport: 深度最小 → 更多并行门 → 更多搬运冲突.
+  ASAP-separate vs ASAP-joint = 深度 vs 搬运的 trade-off.
+rigidity: soft
+domain_tags: [quantum-compiler]
+G(C): 0.5
+derives_from: []
+status: active

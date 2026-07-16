@@ -1,0 +1,15 @@
+id: C-qc-transport
+name: "原子搬运约束"
+stage: implemented
+formal: |
+  原子搬运时间 + 转移时间 ≤ 门执行时间窗口:
+    t_move(d) + N_tr × t_SLM-AOD ≤ t_gate_window
+    t_move(d) = 2√(d/a) (对称加减速模型, Eq 5)
+
+  搬运引入退相干开销: 搬运总时长累加到 qubit idle time → fidelity 衰减.
+  搬运保真度 f_tr 接近 1 (sufficiently smooth transport), 主要代价在时间.
+rigidity: soft
+domain_tags: [quantum-compiler]
+G(C): 0.5
+derives_from: []
+status: active

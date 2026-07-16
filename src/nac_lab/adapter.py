@@ -1,8 +1,7 @@
 """
 adapter.py — ZAP keep-vs-move solver adapter.
 
-Self-contained implementation.  No dependency on external frameworks.
-
+Implements framework.solver_adapter.SolverAdapter for the ZAP domain.
 Two strategies:
   A. hard_threshold — ZAP original Eq.15 (per-qubit independent comparison)
   B. al_soft — Augmented Lagrangian joint optimization (all qubits coupled
@@ -12,21 +11,13 @@ Two strategies:
 @verified: 2026-07-16 — AL soft produces 0 slot violations vs 127 for hard
 """
 from __future__ import annotations
-import time
-from dataclasses import dataclass, field
+import sys, os, time
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from framework.solver_adapter import SolverAdapter, Solution
 
 
-@dataclass
-class Solution:
-    """Result from a solver adapter invocation."""
-    decisions: dict[str, int] = field(default_factory=dict)
-    converged: bool = False
-    elapsed_ms: float = 0.0
-    objective_value: float = 0.0
-    metadata: dict = field(default_factory=dict)
-
-
-class ZAPKeepVsMoveAdapter:
+class ZAPKeepVsMoveAdapter(SolverAdapter):
     """ZAP domain adapter: idle-qubit keep-vs-move resolution.
 
     Two strategies:

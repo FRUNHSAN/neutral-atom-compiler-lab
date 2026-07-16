@@ -1,0 +1,15 @@
+id: C-qc-decoherence
+name: "退相干约束"
+stage: implemented
+formal: |
+  比特闲置时间 ≤ T2 相干时间:
+    fidelity_loss = exp(-t_idle / T2)
+    总 fidelity = ∏_{q ∈ Q} exp(-t_q / T2)
+
+  编译器可优化的通道: 减少搬运时间 → 减少 idle time → 降低退相干损失.
+  T2 = 1.5s (实验参数, Bluvstein et al. 2024).
+rigidity: soft
+domain_tags: [quantum-compiler]
+G(C): 0.5
+derives_from: [C-qc-transport]
+status: active

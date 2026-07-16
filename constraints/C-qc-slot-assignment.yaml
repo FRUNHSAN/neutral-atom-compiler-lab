@@ -1,0 +1,12 @@
+id: C-qc-slot-assignment
+name: "坑位分配约束"
+stage: implemented
+formal: |
+  双射约束: mapping: Q → Sites 是单射——每个 qubit 恰好一个坑.
+  坑不重叠: ∀s_i, s_j ∈ Sites: if s_i ≠ s_j then |pos(s_i) - pos(s_j)| ≥ spacing.
+  纠缠区坑对: 对间距 ≤ R_blockade(4μm), 对间间距 ≥ 6μm.
+rigidity: hard
+domain_tags: [quantum-compiler]
+G(C): 0.8
+derives_from: []
+status: active
