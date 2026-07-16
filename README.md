@@ -106,6 +106,11 @@ neutral-atom-compiler-lab/
 │   ├── adapter.py                   ← ZAP 域适配器 (继承 SolverAdapter)
 │   └── bridges.py                   ← 六桥注册表 + 敏感性分类
 │
+├── baselines/                      ← 第三方编译器源码（gitignored）
+│   ├── neutral-atom-compilation/   ← ZAP (MIT 许可证, IEEE TQE 2026)
+│   ├── Enola/                      ← Enola (UCLA-VAST)
+│   └── ZAC/                        ← ZAC (UCLA-VAST, HPCA 2025)
+│
 ├── experiments/                     ← 四个独立实验脚本
 │   ├── bridge_swap.py               ← 完整六桥 swap
 │   ├── cross_validate.py            ← 三编译器 fidelity 交叉验证
@@ -140,8 +145,7 @@ pip install pyyaml
 python framework/check.py .                         # 约束一致性检查
 python experiments/strategy_compare.py              # 硬阈值 vs AL 软决策
 python experiments/bridge_swap.py                   # 六桥 swap (synthetic)
-python experiments/bridge_swap.py --zap-path <path> # 六桥 swap (live ZAP)
-python experiments/cross_validate.py                # Fidelity 交叉验证
+python experiments/bridge_swap.py --benchmark qft_n10  # 六桥 swap (live ZAP — 自动使用 baselines/)
 ```
 
 ---

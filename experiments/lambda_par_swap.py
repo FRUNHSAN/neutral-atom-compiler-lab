@@ -24,6 +24,11 @@ from nac_lab.fidelity import DEFAULT_PARAMS
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+DEFAULT_ZAP_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "baselines", "neutral-atom-compilation",
+)
+
 
 def adaptive_lambda(n_q: int, n_2q: int, n_stages: int) -> float:
     """Circuit-adaptive λ_par formula.
@@ -129,7 +134,8 @@ def main():
     )
     parser.add_argument(
         "--zap-path",
-        help="Path to ZAP source code (for live execution mode)",
+        default=DEFAULT_ZAP_PATH,
+        help=f"Path to ZAP source code (default: {DEFAULT_ZAP_PATH})",
     )
     parser.add_argument(
         "--synthetic", action="store_true", default=True,

@@ -27,6 +27,12 @@ from nac_lab.fidelity import DEFAULT_PARAMS
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+# Default ZAP path (bundled in baselines/)
+DEFAULT_ZAP_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "baselines", "neutral-atom-compilation",
+)
+
 
 # ── Benchmark circuits ───────────────────────────────────
 BENCHMARKS = {
@@ -227,7 +233,8 @@ def main():
     )
     parser.add_argument(
         "--zap-path",
-        help="Path to ZAP source code (for live ZAP execution mode)",
+        default=DEFAULT_ZAP_PATH,
+        help=f"Path to ZAP source code (default: {DEFAULT_ZAP_PATH})",
     )
     parser.add_argument(
         "--benchmark",
