@@ -8,6 +8,8 @@ build/
 # Virtual environments
 .venv/
 venv/
+.env/
+env/
 
 # IDE
 .vscode/
@@ -28,3 +30,17 @@ docs/papers/
 # OS
 .DS_Store
 Thumbs.db
+
+# Verification stack generated reports (time-series, not source)
+.stale.json
+.stale_history/
+.smt_report.json
+.cfg_report.json
+.effect_report.json
+.per_path_density.json
+
+# 推理链 — 公开链（chains/）git 追踪，私有链（chains_private/）仅本地
+推理链制作方法.md
+CLAUDE copy.md
+.ai_reasoning/index_private.yaml
+.ai_reasoning/chains_private/

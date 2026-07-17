@@ -64,6 +64,10 @@ class Constraint:
     G_C: float = 0.0
     derives_from: list[str] = field(default_factory=list)
     status: str = "active"
+    # AI 协作者元数据（三元架构 — Doc 31）
+    ai_confidence: str = ""        # HIGH / MEDIUM / LOW / UNREVIEWED
+    last_ai_review: str = ""       # YYYY-MM-DD
+    ai_review_notes: str = ""      # AI 审查时的备注（可选）
 
 
 @dataclass

@@ -7,7 +7,7 @@ formal: |
     总 fidelity = ∏_{q ∈ Q} exp(-t_q / T2)
 
   编译器可优化的通道: 减少搬运时间 → 减少 idle time → 降低退相干损失.
-  T2 = 1.5s (实验参数, Bluvstein et al. 2024).
+  T2 数值见 instance-space/protocol（实验测量值, Bluvstein et al. 2024 为参考来源）.
 rigidity: soft
 domain_tags: [quantum-compiler]
 G(C): 0.5

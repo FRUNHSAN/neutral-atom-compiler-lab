@@ -3,10 +3,11 @@ name: "里德堡阻塞半径约束"
 stage: implemented
 formal: |
   双比特门连通性: ∀CZ_gate(q1, q2): dist(p(q1), p(q2)) ≤ R_blockade.
-  R_blockade = 4.3μm (Rb 原子, 主量子数 n~70).
+  R_blockade 为 Rb 原子在主量子数 n~70 时的阻塞半径.
 
   对间距 ≤ R_blockade → 两个原子被同一激光激发 → 纠缠.
-  对间间距 ≥ 6μm > R_blockade → 不同对的原子互不干扰.
+  对间间距 > R_blockade → 不同对的原子互不干扰.
+  R_blockade 数值见 instance-space/protocol.
 rigidity: hard
 domain_tags: [quantum-compiler]
 G(C): 0.9

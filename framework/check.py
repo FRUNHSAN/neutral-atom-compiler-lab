@@ -13,6 +13,7 @@ check.py — 约束式工程一致性检查（量子编译器域）
 """
 from __future__ import annotations
 import sys, os, glob
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from framework.io import load_all_constraints, load_all_boundaries, load_all_bridges
 from framework.schema import Stage, BridgeLayer
@@ -65,6 +66,7 @@ def check_all(project_root: str) -> tuple[list[str], list[str], list[str]]:
     _f3_derives_dag(constraints, failures)
     _f4_formal_nonempty(constraints, failures)
     _f5_domain_tags(constraints, failures)
+    _f6_formal_no_literals(constraints, warnings)
 
     # ── BD: Domain bridge declarations ────────────────
     _bd1_declaration_no_resolve(declarations, failures)
@@ -89,6 +91,9 @@ def check_all(project_root: str) -> tuple[list[str], list[str], list[str]]:
 
     # ── S: Stage gate ────────────────────────────────
     _s1_no_skip_stage(constraints, failures)
+
+    # ── S10: Reasoning chain integrity ────────────────
+    _s10_chain_integrity(project_root, constraints, all_boundaries, all_bridges, failures, info)
 
     # ── I: Info ──────────────────────────────────────
     _i1_hard_constraint_coverage(constraints, all_boundaries, info)
@@ -141,6 +146,35 @@ def _f5_domain_tags(constraints, failures):
     for cid, c in constraints.items():
         if not c.domain_tags:
             failures.append(f"F5: '{cid}' 缺少 domain_tags")
+
+
+def _f6_formal_no_literals(constraints, warnings):
+    """F6: formal 字段不应包含参数数值——数字属于 instance-space 或 boundary。
+
+    扫 formal 字段中看起来像参数值的数字字面量（= 数字 或 比较符 + 非0/1数字）。
+    0 和 1 豁免——它们是语义常数（零违反、单位概率），不是参数。
+    Protocol 8（约束与求解器分离）。
+    """
+    import re
+    # 匹配: = 数字, ≤ 数字, ≥ 数字, < 数字, > 数字
+    # 豁免: 0, 0.0, 1, 1.0（语义常数）
+    # 豁免: 数字后紧跟 √ π e（数学结构常数，非参数）
+    pattern = re.compile(r'[=<≥≤>]\s*(\d+\.?\d*(?:[eE][+-]?\d+)?)\s*(?!√|π|e)')
+    for cid, c in constraints.items():
+        formal = c.formal
+        matches = pattern.findall(formal)
+        for m in matches:
+            try:
+                val = float(m)
+                if val == 0.0 or val == 1.0:
+                    continue
+                warnings.append(
+                    f"F6: '{cid}' formal 含参数数值 '{m}'——"
+                    f"数值应属于 instance-space 或 boundary，不属于 constraint"
+                )
+                break  # 一个约束只报一次
+            except ValueError:
+                pass
 
 
 # ── BD1: Bridge declarations ────────────────────────────
@@ -286,6 +320,164 @@ def _s1_no_skip_stage(constraints, failures):
                     failures.append(f"S1 (F10): '{cid}' stage={c.stage.value} 跳级（父 '{pid}' stage={constraints[pid].stage.value}）")
 
 
+# ── S10: Reasoning chain integrity ─────────────────────
+
+def _parse_chain_frontmatter(filepath: str) -> dict | None:
+    """Extract YAML frontmatter from a Markdown chain file."""
+    import yaml
+    try:
+        with open(filepath, encoding="utf-8") as f:
+            content = f.read()
+        if not content.startswith("---"):
+            return None
+        parts = content.split("---", 2)
+        if len(parts) < 3:
+            return None
+        return yaml.safe_load(parts[1]) or {}
+    except Exception:
+        return None
+
+
+def _check_one_chain_registry(
+    chains_dir: str, index_path: str, label: str,
+    constraints, boundaries, bridges,
+    failures, info,
+    private_ids: set,    # public chains must not reference these
+):
+    """Check one (index, chains_dir) pair. label = 'public' or 'private'.
+
+    Returns (index_chains dict, chain_files dict).
+    """
+    import yaml
+
+    if not os.path.isdir(chains_dir):
+        return {}, {}
+
+    # Load index
+    index_data = {}
+    if os.path.exists(index_path):
+        try:
+            with open(index_path, encoding="utf-8") as f:
+                index_data = yaml.safe_load(f) or {}
+        except Exception:
+            info.append(f"S10: {label} index 解析失败")
+            return {}, {}
+
+    index_chains = {c["chain_id"]: c for c in index_data.get("chains", [])}
+
+    # Collect chain files (skip _TEMPLATE.md)
+    chain_files = {}
+    for fname in sorted(os.listdir(chains_dir)):
+        if fname.startswith("_") or not fname.endswith(".md"):
+            continue
+        fpath = os.path.join(chains_dir, fname)
+        fm = _parse_chain_frontmatter(fpath)
+        if fm and fm.get("chain_id"):
+            cid = fm["chain_id"]
+            chain_files[cid] = {"path": fpath, "fm": fm}
+
+    is_public = (label == "public")
+
+    # (a) Chain file → in index
+    for cid in chain_files:
+        if cid not in index_chains:
+            failures.append(f"S10(a): {label} 链文件 '{cid}' 不在 {label} index 中")
+
+    # (b) Index entry → chain file exists
+    for cid in index_chains:
+        if cid not in chain_files:
+            if is_public:
+                failures.append(f"S10(b): 公开链 '{cid}' 文件不存在——应被 git 追踪")
+            else:
+                info.append(f"S10(b): 私有链 '{cid}' 文件不存在（gitignored，预期现象）")
+
+    # (f) Public chain's related → must not reference private chain IDs
+    if is_public and private_ids:
+        for cid in chain_files:
+            fm = chain_files[cid]["fm"]
+            related = fm.get("related", []) or []
+            for ref_id in related:
+                if ref_id in private_ids:
+                    failures.append(f"S10(f): 公开链 '{cid}' related 引用了私有链 '{ref_id}'——公开链不能依赖私有链")
+
+    return index_chains, chain_files
+
+
+def _s10_chain_integrity(project_root, constraints, boundaries, bridges, failures, info):
+    """S10: Check reasoning chain integrity (public + private).
+
+    (a) Every chain file → present in its index
+    (b) Every index entry → chain file exists (public: FAIL, private: FYI)
+    (c) Active chain files.code / files.experiments → paths exist
+    (d) Active chain files.constraints / files.boundaries / files.bridges → IDs exist
+    (e) Active chain produces_invariants / produces_constraints → IDs in registry
+    (f) Public chain's related → must not reference private chain IDs
+    """
+    base = os.path.join(project_root, ".ai_reasoning")
+
+    # Scan private first — collect private chain IDs for cross-reference check
+    _, private_files = _check_one_chain_registry(
+        os.path.join(base, "chains_private"),
+        os.path.join(base, "index_private.yaml"),
+        "private", constraints, boundaries, bridges,
+        failures, info, set(),
+    )
+    private_ids = set(private_files.keys())
+
+    # Scan public — pass private_ids for rule (f)
+    _, public_files = _check_one_chain_registry(
+        os.path.join(base, "chains"),
+        os.path.join(base, "index.yaml"),
+        "public", constraints, boundaries, bridges,
+        failures, info, private_ids,
+    )
+
+    # Merge for (c)-(e) checks
+    all_chain_files = {}
+    all_chain_files.update(private_files)
+    all_chain_files.update(public_files)
+
+    # (c)-(e) Per active chain checks
+    valid_cids = set(constraints.keys())
+    valid_bids = set(boundaries.keys())
+    valid_brids = set(bridges.keys())
+    all_inv_ids = set(constraints.keys())
+
+    for cid, entry in all_chain_files.items():
+        fm = entry["fm"]
+        status = fm.get("status", "draft")
+
+        if status in ("active", "reverted"):
+            files = fm.get("files", {})
+            if isinstance(files, dict):
+                for cat in ("code", "experiments"):
+                    for fpath in files.get(cat, []) or []:
+                        abspath = os.path.join(project_root, fpath)
+                        if not os.path.exists(abspath):
+                            info.append(f"S10(c): 链 '{cid}' status={status}, files.{cat}='{fpath}' 不存在（私有仓库预期现象，或建议检查是否需标记 reverted/archived）")
+
+                for ref_id in files.get("constraints", []) or []:
+                    if ref_id not in valid_cids:
+                        failures.append(f"S10(d): 链 '{cid}' files.constraints 引用不存在的 '{ref_id}'")
+                for ref_id in files.get("boundaries", []) or []:
+                    if ref_id not in valid_bids:
+                        failures.append(f"S10(d): 链 '{cid}' files.boundaries 引用不存在的 '{ref_id}'")
+                for ref_id in files.get("bridges", []) or []:
+                    if ref_id not in valid_brids:
+                        failures.append(f"S10(d): 链 '{cid}' files.bridges 引用不存在的 '{ref_id}'")
+
+            for inv_id in fm.get("produces_invariants", []) or []:
+                if inv_id not in all_inv_ids:
+                    info.append(f"S10(e): 链 '{cid}' produces_invariants 引用未注册的 '{inv_id}'")
+            for con_id in fm.get("produces_constraints", []) or []:
+                if con_id not in valid_cids:
+                    info.append(f"S10(e): 链 '{cid}' produces_constraints 引用未注册的 '{con_id}'")
+
+    n_public = len(public_files)
+    n_private = len(private_files)
+    info.append(f"S10: {n_public} 条公开链 + {n_private} 条私有链 = {n_public + n_private} total")
+
+
 # ── I1-I4: Info ─────────────────────────────────────────
 
 def _i1_hard_constraint_coverage(constraints, boundaries, info):
@@ -341,6 +533,17 @@ def main():
         print(f"\n  PASS: 0 FAIL")
     print(f"  WARN: {len(warnings)}")
     print(f"  FYI:  {len(info)}\n")
+
+    # Write .stale.json snapshot for time-series tracking (P6 — Doc 32)
+    try:
+        from framework.stale_snapshot import collect_snapshot, save_snapshot, archive_snapshot, cleanup_history
+        snap = collect_snapshot(root)
+        save_snapshot(root, snap)
+        archive_snapshot(root, snap)
+        cleanup_history(root)
+    except Exception:
+        pass  # stale snapshot is best-effort; never block check.py exit
+
     return 1 if failures else 0
 
 
