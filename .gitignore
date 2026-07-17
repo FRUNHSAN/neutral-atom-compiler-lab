@@ -19,6 +19,7 @@ env/
 results/*.json
 results/*.csv
 !results/.gitkeep
+!results/zap_reproduction.json
 
 # ZAP third-party code (if cloned locally)
 zap-source/
