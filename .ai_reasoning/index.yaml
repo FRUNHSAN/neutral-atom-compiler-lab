@@ -1,0 +1,14 @@
+library_version: 1
+last_updated: "2026-07-17T00:00:00Z"
+
+chains:
+  - chain_id: 2026-07-17-yaml-ci-canary
+    title: "YAML 约束层保留为 CI 金丝雀 — 不删、不绑实验、不扩展"
+    layer: L1
+    ternary_owner: agent
+    tags: [framework, yaml, ci, project-structure, cleanup]
+    status: active
+    produces_invariants: []
+    produces_constraints: []
+    cross_domain: false
+    domains_verified: []
