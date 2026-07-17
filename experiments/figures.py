@@ -83,7 +83,7 @@ def fig1_bridge_sensitivity():
 
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor="#d62728", label="HIGH: slot violation 168→0 (AL joint optimization)"),
+        Patch(facecolor="#d62728", label="HIGH: slot violation 170→0 (AL joint optimization)"),
         Patch(facecolor="#ff7f0e", label="MEDIUM: weak fidelity impact (−0.0001)"),
         Patch(facecolor="#1f77b4", label="LOW / plateau: Δ=0 at TQE scale (10–30 qubits)"),
     ]
@@ -125,7 +125,7 @@ def fig2_strategy_compare():
 
     # ── Panel B: Slot Violations (tight slot stress test) ──
     # Stress test: 20q, slot=3, 15 stages, 70% prefer stay
-    ax2.bar([0], [168], 0.5, label="hard_threshold", color="#1f77b4", edgecolor="white")
+    ax2.bar([0], [170], 0.5, label="hard_threshold", color="#1f77b4", edgecolor="white")
     ax2.bar([1], [0],   0.5, label="AL soft",        color="#d62728", edgecolor="white")
 
     ax2.set_xticks([0, 1])
@@ -134,13 +134,13 @@ def fig2_strategy_compare():
     ax2.set_title("Slot Violations (tight slot: 3 for 20q, 15 stages)")
     ax2.legend(fontsize=7)
 
-    ax2.annotate("168 violations\n(independent over-commit)", (0, 168), xytext=(0, 185),
+    ax2.annotate("170 violations\n(independent over-commit)", (0, 170), xytext=(0, 185),
                  ha="center", fontsize=8, color="#1f77b4", style="italic")
     ax2.annotate("0 violations\n(joint capacity-aware)", (1, 5), xytext=(1, 22),
                  ha="center", fontsize=8, color="#d62728", style="italic")
 
     fig.text(0.5, -0.04,
-             "Loose slot: AL ≈ hard threshold (fidelity within noise). Tight slot: AL eliminates all violations (168→0).",
+             "Loose slot: AL ≈ hard threshold (fidelity within noise). Tight slot: AL eliminates all violations (170→0).",
              ha="center", fontsize=8, color="#888", style="italic")
 
     for a in [ax1, ax2]:

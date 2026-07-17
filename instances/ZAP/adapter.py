@@ -8,7 +8,7 @@ Two strategies:
                via slot capacity constraint)
 
 @verified: 2026-07-15 — hard_threshold matches ZAP Eq.15 exactly
-@verified: 2026-07-16 — AL soft produces 0 slot violations vs 127 for hard
+@verified: 2026-07-17 — AL soft produces 0 slot violations vs 170 for hard (stress test, deterministic)
 """
 from __future__ import annotations
 import sys, os, time

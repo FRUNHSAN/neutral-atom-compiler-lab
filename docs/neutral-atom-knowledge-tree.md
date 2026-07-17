@@ -268,7 +268,7 @@ F_total = (f_1)^g1 × (f_2)^g2 × (f_xtalk)^N_xtalk × (f_tr)^N_tr × Π exp(-t_
 
 我的 AL 改进：
   连续权重 w∈[0,1] + 全局约束 Σ(1-w_i) ≤ K → 联合优化
-  紧 slot 下 violation 168→0，常规场景 fidelity 无差异
+  紧 slot 下 violation 170→0，常规场景 fidelity 无差异
 ```
 
 > [ZAP §IV-C, Eq.15], [本项目 strategy_compare + tight_slot]

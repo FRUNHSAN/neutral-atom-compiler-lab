@@ -11,9 +11,19 @@ superseded_by: []
 reverted_by: ""
 related: []
 files:
-  constraints: ["domain/constraints/C-qc-*.yaml"]
-  boundaries: ["instances/ZAP/boundaries/B-zap-hardware.yaml"]
-  bridges: ["instances/ZAP/bridges/BR-*.yaml"]
+  constraints:
+    - C-qc-aod-routing
+    - C-qc-bandwidth
+    - C-qc-connectivity
+    - C-qc-crosstalk
+    - C-qc-decoherence
+    - C-qc-depth
+    - C-qc-fidelity
+    - C-qc-parking
+    - C-qc-slot-assignment
+    - C-qc-transport
+  boundaries: [B-zap-hardware]
+  bridges: [BR-keep-vs-move, BR-parallel-vs-distance]
   code: ["framework/check.py", "framework/io.py", "framework/schema.py"]
   experiments: []
 produces_invariants: []

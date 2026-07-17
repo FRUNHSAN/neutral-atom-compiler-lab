@@ -12,7 +12,7 @@ ZAP 的 6 个决策点形式化为桥，逐一 monkey-patch 替换，TQE benchma
 
 | 桥 | ZAP 默认 | 替代方案 | Δ Fidelity | 敏感性 |
 |---|---|---|---|---|
-| keep-vs-move | hard_threshold Eq.15 | AL 联合优化 | 0 | **高** (slot violation 168→0) |
+| keep-vs-move | hard_threshold Eq.15 | AL 联合优化 | 0 | **高** (slot violation 170→0) |
 | parallel-vs-distance | λ=1000 | 电路自适应 | 0 | 低 |
 | parking-displacement | 1 site | 5 sites | -0.0001 | 中 |
 | asap-strategy | separate | joint | 0 | 低 |
@@ -30,7 +30,7 @@ AL 软决策：连续权重 w∈[0,1] + 全局 slot 约束 Σ(1−w_i) ≤ slot_
 | 场景 | hard_threshold | AL soft |
 |---|---|---|
 | 宽松 slot (4 for 20q) | fidelity 0.89, 0 violation | fidelity 0.88, 0 violation |
-| 紧 slot (3 for 20q) | **168 violations** | **0 violations** |
+| 紧 slot (3 for 20q) | **170 violations** | **0 violations** |
 
 **AL 不伤害常规场景 fidelity，紧 slot 下消除所有约束违反。结构性修复，不是参数调优。**
 

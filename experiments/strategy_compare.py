@@ -16,6 +16,7 @@ import sys
 import os
 import random
 import time
+import zlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "domain", "formulas"))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "instances", "ZAP"))
@@ -48,7 +49,7 @@ def generate_cost_matrix(
       qft      — butterfly pattern, high all-to-all reuse
       regular3 — uniform degree-3, each qubit used exactly 3 times
     """
-    rng = random.Random(seed + hash(circuit_type) % 10000 + stage)
+    rng = random.Random(seed + zlib.crc32(circuit_type.encode()) + stage)
 
     if circuit_type == "qram":
         reuse = [rng.randint(1, n_stages) for _ in range(n_qubits)]
