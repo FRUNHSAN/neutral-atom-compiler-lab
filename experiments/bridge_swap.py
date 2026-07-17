@@ -235,8 +235,8 @@ def main():
     )
     parser.add_argument(
         "--zap-path",
-        default=DEFAULT_ZAP_PATH,
-        help=f"Path to ZAP source code (default: {DEFAULT_ZAP_PATH})",
+        default=None,
+        help=f"Path to ZAP source code (e.g. baselines/neutral-atom-compilation)",
     )
     parser.add_argument(
         "--benchmark",

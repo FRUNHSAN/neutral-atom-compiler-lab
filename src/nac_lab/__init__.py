@@ -1,12 +1,9 @@
 """
 nac_lab — Neutral Atom Compiler Laboratory.
 
-A self-contained toolkit for analyzing decision points in neutral-atom
-quantum compilers.  Provides:
-
-- fidelity.py : Cross-compiler fidelity model (ZAP Eq.4)
-- adapter.py  : Pluggable solver adapters for compiler decision points
-- bridges.py  : Bridge declaration and swap infrastructure
+- bridges.py : ZAP 六桥声明 + 注册表
+- fidelity  → domain/formulas/fidelity.py（唯一正本）
+- adapter   → instances/ZAP/adapter.py（唯一正本）
 """
 
 __version__ = "0.1.0"
