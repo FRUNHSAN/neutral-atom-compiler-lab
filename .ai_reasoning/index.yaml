@@ -12,3 +12,14 @@ chains:
     produces_constraints: []
     cross_domain: false
     domains_verified: []
+
+  - chain_id: 2026-07-17-hash-determinism-fix
+    title: "hash()→zlib.crc32：修复实验不可复现的确定性 bug"
+    layer: L1
+    ternary_owner: agent
+    tags: [bug, determinism, reproducibility, hash, experiment]
+    status: active
+    produces_invariants: []
+    produces_constraints: []
+    cross_domain: false
+    domains_verified: []

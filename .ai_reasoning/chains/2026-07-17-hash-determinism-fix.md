@@ -37,13 +37,13 @@ domains_verified: []
 
 # Decision
 
-**`hash(circuit_type)` → `zlib.crc32(circuit_type.encode())`。两文件各改一行。全仓库数字从 168 统一为 161（crc32 下的稳定 stress test 结果）。**
+**`hash(circuit_type)` → `zlib.crc32(circuit_type.encode())`。两文件各改一行。stress test 生成器以 `--stress` 模式提交进 `tight_slot_compare.py`，全仓库数字统一为该命令的确定性输出 170。**
 
 # Rationale
 
 `zlib.crc32` 在标准库中，跨进程、跨平台、跨 Python 版本输出完全一致。`crc32('qram')` 永远返回 `3931628504`——无论什么 PYTHONHASHSEED。
 
-修复后 stress test（slot=3, n_q=20, 70% prefer stay）稳定输出 `hard_threshold violations: 161, AL soft violations: 0`。三进程验证全部一致。
+修复分两步收敛：初版 stress test 是未入库的临时脚本（slot=3, n_q=20, 70% prefer stay），输出 161——但"数字可复现"要求生成数字的代码在仓库里。将 stress 生成器提交为 `tight_slot_compare.py --stress` 后，确定性输出为 170→0（三进程验证一致）。**数字以仓库内可复现的命令为准，不以任何一次临时运行为准。**
 
 # Alternatives
 
@@ -55,7 +55,8 @@ domains_verified: []
 
 - 独立进程三次运行：hash 输出分别为 `1672806350090476774`, `-4459704626103846564`, `5706214236424888944`
 - crc32 三次输出：全部 `3931628504`
-- 修复后 stress test 三进程验证：全部 `hard=161, soft=0`
+- 初版临时 stress 脚本（未入库）输出 161 → 教训：数字必须出自仓库内脚本
+- `--stress` 模式入库后三进程验证：全部 `Result: 170 → 0`
 
 # Future Guidance
 
