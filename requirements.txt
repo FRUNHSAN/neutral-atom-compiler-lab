@@ -1,0 +1,17 @@
+# 中性原子量子编译器分析 — 依赖
+# 安装: pip install -r requirements.txt
+
+# ── 框架核心 ──
+pyyaml>=6.0          # YAML 约束/边界/桥文件加载 (framework/io.py)
+
+# ── 可视化 ──
+matplotlib>=3.8      # 实验图表 (六桥条形图、fidelity breakdown、热力图)
+numpy>=1.26          # 数值计算 + matplotlib 依赖
+
+# ── ZAP 编译器 (live 模式) ──
+qiskit>=2.0          # 量子电路 transpile (ZAP 依赖)
+qiskit-qasm3-import>=0.6  # OpenQASM 3 导入 (ZAP 依赖)
+tqdm>=4.68           # 进度条 (ZAP 依赖)
+scipy>=1.14          # 科学计算 (ZAP 依赖)
+# ZAP 源码本身体在 baselines/neutral-atom-compilation/ (gitignored)
+# 克隆: git clone https://github.com/BAQIS-Quantum/neutral-atom-compilation baselines/neutral-atom-compilation
