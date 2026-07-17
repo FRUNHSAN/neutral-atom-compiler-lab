@@ -1,78 +1,88 @@
 # 工作总结 — ZAP 编译器分析
 
-> 2026-07-15 ~ 2026-07-16，12 commits
+> 2026-07-15 ~ 2026-07-17
+
+---
 
 ## 一、做了什么
 
 ### 1. 六桥基准测试
 
-ZAP 的 6 个决策点，逐一 monkey-patch 替换，3 种电路对比：
+ZAP 的 6 个决策点形式化为桥，逐一 monkey-patch 替换，TQE benchmark 套件对比：
 
-| Bridge | 默认 | 替代 | Δ | 敏感性 |
-|--------|------|------|-----|--------|
-| BR-keep-vs-move | lookahead 硬阈值 | AL 软决策 | 0 (此规模) | **高** |
-| BR-parallel-vs-distance | λ=1000 | 电路自适应 | 0 | 无 |
-| BR-parking-displacement | 1 site | 5 sites | <0 | 弱 |
-| BR-asap-strategy | separate | joint | 0 | 无 |
-| BR-qubit-priority | 1/(l+1) | reuse-aware | 0 | 无 |
-| BR-idle-cost-alpha | α=1.0 | α∈[0.5,5.0] | α=5 掉 | 中 |
+| 桥 | ZAP 默认 | 替代方案 | Δ Fidelity | 敏感性 |
+|---|---|---|---|---|
+| keep-vs-move | hard_threshold Eq.15 | AL 联合优化 | 0 | **高** (slot violation 168→0) |
+| parallel-vs-distance | λ=1000 | 电路自适应 | 0 | 低 |
+| parking-displacement | 1 site | 5 sites | -0.0001 | 中 |
+| asap-strategy | separate | joint | 0 | 低 |
+| qubit-priority | 1/(l+1) | reuse-aware | 0 | 低 |
+| idle-cost-alpha | α=1.0 | α=2.0 | 0 | 低 |
 
-**核心发现：6 个决策点中只有 keep-vs-move 是高敏感性参数。ZAP 默认值已近最优。**
+**核心发现**：5/6 的桥已达 fidelity 平台期。只有 keep-vs-move 存在结构性优化空间——不是 fidelity Δ，而是 slot 容量约束下的系统性违反。
 
-### 2. 三编译器 Fidelity 交叉验证
+### 2. keep-vs-move：硬阈值 → AL 联合优化
 
-同一公式（Eq.4），验证三个编译器的内置模拟器：
+ZAP Eq.15 是 per-qubit 独立硬阈值（`if L_xtalk > L_tr + L_dec → move`），不考虑有限 slot 容量。
 
-| 编译器 | 结果 | 关键发现 |
-|--------|------|---------|
-| Enola | 5/5 PASS | 无 zone → crosstalk=0.975 |
-| ZAC | 6/6 PASS | zone 架构 → crosstalk=1.0 |
-| ZAP | 内置一致性 | 三策略对比：lookahead/always_move/always_stay |
+AL 软决策：连续权重 w∈[0,1] + 全局 slot 约束 Σ(1−w_i) ≤ slot_count → 增广拉格朗日联合求解。
 
-### 3. 跨编译器 benchmark
+| 场景 | hard_threshold | AL soft |
+|---|---|---|
+| 宽松 slot (4 for 20q) | fidelity 0.89, 0 violation | fidelity 0.88, 0 violation |
+| 紧 slot (3 for 20q) | **168 violations** | **0 violations** |
 
-同一电路（toy2），Enola vs ZAC：
-```
-                 Enola (no zone)    ZAC (zone)       Delta
-Crosstalk:       0.975              1.000           +0.025
-Transfer:        0.968              0.938           -0.031
-TOTAL:           0.883              0.887           +0.39%
-```
-zone 的 crosstalk 收益被搬运代价抵消大半，净赢 0.39%。
+**AL 不伤害常规场景 fidelity，紧 slot 下消除所有约束违反。结构性修复，不是参数调优。**
 
-### 4. ZAP 策略对比
+### 3. 三编译器 Fidelity 交叉验证
 
-ZAP 三策略（qft_n10）：
-```
-                 Fidelity  Crosstalk  Duration
-lookahead(ZAP):  0.509     1.000      7980μs
-always_move:     0.503     1.000      7905μs
-always_stay:     0.420     0.802      6768μs  ← 串扰 -20%
-```
-always_stay 的 fidelity 崩了——空闲 qubit 留在纠缠区被激光照。
+同一公式（ZAP Eq.4），验证三个编译器的内置仿真器：
+
+| 编译器 | 架构 | 结果 |
+|---|---|---|
+| Enola (UCLA-VAST) | 单区，无 zone | 5/5 PASS |
+| ZAC (UCLA-VAST, HPCA 2025) | zone，模拟退火迭代 | 6/6 PASS |
+| ZAP (BAQIS, IEEE TQE 2026) | zone，单遍确定性 | 内置自洽 |
+
+### 4. ZAP 原始 Benchmark 复现
+
+5 个代表性电路在本地环境复现，fidelity 与论文 Fig.7 差异 < 0.001。
+
+| Benchmark | 我们的复现 | 论文 | Δ |
+|---|---|---|---|
+| QFT (n=10) | 0.5029 | 0.503 | -0.0001 |
+| Ising (n=26) | 0.6578 | 0.658 | -0.0002 |
+| GHZ (n=30) | 0.6433 | 0.643 | +0.0003 |
+| QRAM (n=20) | 0.3584 | 0.358 | +0.0004 |
+| Multiplier (n=15) | 0.0824 | 0.082 | +0.0004 |
 
 ---
 
-## 二、框架撞出的东西
+## 二、项目状态
 
-1. **cost model 属于 boundary，不属于 constraint** — constraint 管"什么是对/错"，boundary 管"错了扣多少分"
-2. **求解策略不是约束** — greedy MIS、parking 启发式不是约束，是满足约束的算法
-3. **转化率不是目标** — ZAP 52% 是求解器代码，不转化是对的
-4. **可执行 discretization_gap** — 从 YAML 声明变成 benchmark 测量
-5. **benchmark-driven 验证** — 不是 assert，是跑电路 → 比保真度 → 出对比表
+- 7 个实验脚本，全部可独立运行
+- 申请材料包（4 份文档 + 5 张图）
+- ZAP 完整复现流程
+- Python 3.12 + venv + requirements.txt
+- 框架自检 0 FAIL
 
 ---
 
 ## 三、真正的优势
 
-**它把"应该是什么"和"怎么做到"分开了。** ZAP 的 placer.py 里这两个混在一起：串扰代价计算和贪心坑位选择写在同一个 for 循环里。框架把它们拆成 constraint 声明和 implementation。改约束只改声明，换求解策略只换 adapter，不改的不受影响。
+**methodology 不依赖 ZAP 源码细节。** ZAP 的 placer.py 把串扰代价计算和贪心坑位选择写在同一个 for 循环里。桥的视角把它们拆成约束声明（source/target）和求解策略（resolve_fn）。替换一个决策不需要理解全部 placement 逻辑——只需要定位 monkey-patch 注入点。
 
-**六个决策点，九分钟跑完，不改 ZAP 源码。** 如果每次替换都要改 ZAP 源码、重新理解 placement 逻辑，六次替换要花六天。框架九分钟排除五个。
+**六座桥，几分钟跑完，不改 ZAP 源码。** 框架快速排除 5 个无效方向，聚焦唯一有价值的目标。
+
+**AL 软决策和三支冲突分析是同构的。** hard_threshold 是二支决策（搬/不搬），AL 的连续权重 w∈[0,1] 引入了 DEFER 区间——恰好是胡孟军三支冲突分析（IEEE TFS 2026）在编译器域的实例化。这是在胡老师两个独立研究方向之间架桥的天然切入点。
 
 ---
 
-## 四、局限
+## 四、局限与下一步
 
-1. 所有实验在 10–30 qubit 规模
-2. 六座桥，零座赢过 ZAP 默认参数——框架证明了"能换"，没证明"换了更好"
-3. 1005 行求解器完全没碰——greedy MIS、placement heuristics 的替换是最核心的改进方向
+1. 紧 slot 实验是 synthetic stress test，未在真实 benchmark 上验证 AL 的优势
+2. 其余五座桥的替代策略是简单替换，未做电路自适应优化
+3. fidelity 模型假设错误独立——五个物理过度简化（搬运-退相干耦合、阻塞概率性、f_tr 空间依赖、SLM 不均匀、串扰空间依赖）尚未测绘
+4. 跨编译器桥分析方法仅在 ZAP 上完整展开，Enola/ZAC/PowerMove 待覆盖
+
+**下一步（见 ROADMAP.md）**：物理缺陷测绘 → 紧 slot 在真实 benchmark 验证 → 跨编译器推广 → 三支冲突分析 × 编译器桥的形式化。
