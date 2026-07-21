@@ -1,0 +1,13 @@
+# ZAP paper reproduction environment (locked 2026-07-20)
+# These are the versions that produce the reproduction_diff.csv numbers.
+# Different versions (especially qiskit) will produce different routing
+# decisions and thus different fidelity values.
+#
+# To reproduce exactly:
+#   pip install -r baselines/neutral-atom-compilation/requirements.txt
+#   pip install -r experiments/requirements.zap-reproduction.txt
+qiskit==2.5.0
+qiskit-qasm3-import==0.6.0
+numpy==2.5.1
+matplotlib==3.11.1
+pyyaml==6.0.2

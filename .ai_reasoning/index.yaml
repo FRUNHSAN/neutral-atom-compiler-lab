@@ -1,5 +1,5 @@
 library_version: 1
-last_updated: "2026-07-17T00:00:00Z"
+last_updated: "2026-07-21T00:00:00Z"
 
 chains:
   - chain_id: 2026-07-17-yaml-ci-canary
@@ -21,5 +21,20 @@ chains:
     status: active
     produces_invariants: []
     produces_constraints: []
+    cross_domain: false
+    domains_verified: []
+
+  - chain_id: 2026-07-21-multi-compiler-reproduction
+    title: "ZAP Fig.7-14 多编译器复现：10 个 bug、184 次 ZAP 运行"
+    layer: L1
+    ternary_owner: agent
+    tags: [reproducibility, multi-compiler, zap, zac, enola, powermove, bug-journal]
+    status: active
+    produces_invariants:
+      - "所有数字必须来自仓库内一条确定命令"
+      - "Qiskit 版本差异导致 routing 决策不同"
+    produces_constraints:
+      - C-reproducible-numbers
+      - C-locked-environment
     cross_domain: false
     domains_verified: []

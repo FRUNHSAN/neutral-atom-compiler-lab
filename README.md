@@ -50,12 +50,30 @@ python experiments/bridge_swap.py            # 六桥 swap
 python experiments/tight_slot_compare.py --stress  # 紧 slot 压力测试 (170→0, 确定性)
 python experiments/cross_validate.py         # 三编译器 fidelity 验证
 
-# 5. ZAP 复现（需要 baselines/ 中的 ZAP 源码）
-python experiments/reproduce_zap.py --quick  # 5 个 benchmark，~2 秒
+# 5. ZAP 复现验证（需要 baselines/ 中的 ZAP 源码）
+python experiments/reproduction_verify.py           # 14/14 TQE benchmarks + 论文对比
+python experiments/reproduction_verify.py --cached  # 用已有结果（不重跑）
 
 # 6. 生成申请图表
 python experiments/figures.py                # → application/figures/ (5 PNGs)
 ```
+
+---
+
+## ZAP 复现验证
+
+ZAP 论文（IEEE TQE 2026）Fig.7 报告了 14 个 TQE benchmark 的 fidelity。本项目跑完 **14/14**，有机械对比：
+
+```bash
+python experiments/reproduction_verify.py --cached  # → 完整对比表 + CSV
+```
+
+- **门计数**：全部匹配（qft_n10: n_1q=174, n_2q=90 — 和论文一致）
+- **qft_n10 精确值**：论文正文（§VII.A）明确给出 0.541。复现值 0.530，Δ = -0.011 (2.1%)
+- **2.1% 差异根因**：qiskit 版本（2.5 vs 论文 ~0.46/1.x）。门计数一致，差异在 routing 决策
+- **论文口径**：§VII.A 排除单比特门保真度。脚本自动算两种口径，输出 `application/reproduction_diff.csv`
+
+复现声明不靠人眼——任何 clone 下来的人跑一条命令就能看到完整对比表。
 
 ---
 
