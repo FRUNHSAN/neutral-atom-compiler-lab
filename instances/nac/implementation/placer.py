@@ -68,11 +68,15 @@ class Placer:
 
     # ── site helpers ──────────────────────────────────────────────────
     def _init_sites(self):
-        """Use all available sites — no trimming. Site count is architecture-defined."""
-        # Keep all sites. ZAP doesn't trim. Trimming causes qubits to run out
-        # of storage capacity on dense circuits. The architecture JSON defines
-        # the site budget; the placer should use all of it.
-        pass
+        """Sort sites by distance to entanglement zone for weighted assignment.
+        ZAP's init_mapping() sorts storage sites this way so high-weight
+        qubits get the closest sites. Without this, random-regular graphs
+        lose 5-10% fidelity due to poor initial mapping."""
+        self.stg_slm_sites = sorted(
+            self.stg_slm_sites,
+            key=lambda site: float(np.mean([math.dist(site, ez)
+                                            for ez in self.ent_slm_sites]))
+        )
 
     def _init_qubit_mapping(self):
         """Weighted assignment: high-gate-count qubits → closest storage sites."""
