@@ -62,4 +62,4 @@ hardware:
   routing:
     parallel_priority_weight: 1000.0
     initial_mapping_parallel_lookahead: 3
-    idle_cost_alpha: 1.0
+    idle_cost_alpha: 0.3   # tuned: lower = more aggressive move-to-storage

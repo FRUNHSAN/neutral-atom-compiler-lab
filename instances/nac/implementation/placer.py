@@ -63,25 +63,11 @@ class Placer:
 
     # ── site helpers ──────────────────────────────────────────────────
     def _init_sites(self):
-        """Trim site lists to sqrt(n_q) + margin."""
-        import math as m
-
-        n_cols = max(len(set(s[0] for s in self.stg_slm_sites)), 1)
-        n_rows = max(len(set(s[1] for s in self.stg_slm_sites)), 1)
-        stg_c = min(int(m.sqrt(self.n_q)) + 4, n_cols)
-        stg_r = min(int(m.sqrt(self.n_q)) + 2, n_rows)
-        while stg_c * stg_r < self.n_q:
-            stg_c = min(stg_c + 1, n_cols)
-            stg_r = min(stg_r + 1, n_rows)
-        sorted_stg = sorted(self.stg_slm_sites, key=lambda x: (x[0], -x[1]))
-        self.stg_slm_sites = sorted_stg[: stg_c * stg_r]
-
-        n_cols2 = max(len(set(s[0] for s in self.ent_slm_sites)), 1)
-        n_rows2 = max(len(set(s[1] for s in self.ent_slm_sites)), 1)
-        ent_c = min(stg_c + 4, n_cols2)
-        ent_r = min(stg_r, n_rows2)
-        sorted_ent = sorted(self.ent_slm_sites, key=lambda x: (x[0], x[1]))
-        self.ent_slm_sites = sorted_ent[: ent_c * ent_r]
+        """Use all available sites — no trimming. Site count is architecture-defined."""
+        # Keep all sites. ZAP doesn't trim. Trimming causes qubits to run out
+        # of storage capacity on dense circuits. The architecture JSON defines
+        # the site budget; the placer should use all of it.
+        pass
 
     def _init_qubit_mapping(self):
         """Weighted assignment: high-gate-count qubits → closest storage sites."""
