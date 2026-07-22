@@ -1,0 +1,5 @@
+ZAP QFT n=10... 0.617s
+ZAP QFT n=50... 3.339s
+ZAP QFT n=100... 23.692s
+ZAP QFT n=150... 315.746s
+Done. 4 points
