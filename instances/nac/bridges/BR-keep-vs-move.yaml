@@ -1,43 +1,25 @@
-# BR-keep-vs-move — Eq.15 idle-qubit stay-or-move decision
-#
-# The only non-trivial decision in ZAP: for each idle qubit in the entanglement zone,
-# compare crosstalk cost (stay) vs transfer+decoherence cost (move).
-# This is a per-qubit, per-stage greedy decision — no search, no backtrack.
-
+derives_from:
+- C-qc-crosstalk
+- C-qc-transport
+- C-qc-decoherence
 id: BR-keep-vs-move
-name: "Keep vs move — idle qubit crosstalk trade-off"
-type: tension
-mode: coupled
 layer: instance
-
-source: L_stay      # cost group: crosstalk from staying
-target: L_move      # cost group: transfer + decoherence from moving
-
-mediation: "compare crosstalk vs transport+decoherence per idle qubit"
-
+mediation: compare crosstalk vs transport+decoherence per idle qubit
+mode: coupled
+name: Keep vs move — idle qubit crosstalk trade-off
+produces_invariants:
+- Dynamic strategy never worse than always_move (verified on 14 benchmarks)
+- Eq.15 reduces decision space from 2^(N*stages) to 1 deterministic path
 resolve_fn:
+  default_strategy: baseline
   name: compare_log_costs
   params:
-    alpha: 1.0                    # idle_cost_alpha weight on decoherence
-    strategies:                   # routing_strategy enum
-      baseline: "compare and decide per-qubit"
-      lookahead: "compare and decide per-qubit"  # same as baseline in current impl
-      always_move: "force move to storage"
-      always_stay: "keep in entanglement zone"
-  default_strategy: "baseline"
-
-# Implementation note:
-#   crosstalk_cost = N_crosstalk_stages * (-ln f_2q_idle)
-#   transfer_cost  = N_transfer_events  * (-ln f_tr)
-#   decoherence    = (n_q - 1) * movement_time / T2
-#   move_cost      = transfer_cost + alpha * decoherence
-#   if crosstalk_cost > move_cost: move to storage
-
-produces_invariants:
-  - "Dynamic strategy never worse than always_move (verified on 14 benchmarks)"
-  - "Eq.15 reduces decision space from 2^(N*stages) to 1 deterministic path"
-
-derives_from:
-  - C-qc-crosstalk
-  - C-qc-transport
-  - C-qc-decoherence
+    alpha: 1.0
+    strategies:
+      always_move: force move to storage
+      always_stay: keep in entanglement zone
+      baseline: compare and decide per-qubit
+      lookahead: compare and decide per-qubit
+source: L_stay
+target: L_move
+type: tension

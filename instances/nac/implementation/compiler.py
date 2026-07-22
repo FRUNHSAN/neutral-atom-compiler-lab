@@ -12,6 +12,8 @@ import os
 import time
 from pathlib import Path
 
+import yaml as _yaml
+
 from qiskit import transpile, QuantumCircuit
 from qiskit_qasm3_import import parse as qasm3_parse
 
@@ -82,7 +84,7 @@ class Compiler:
         self.ent_sites = sorted(set(self.ent_sites))
 
     def _merge_hardware_defaults(self):
-        """Fill architecture dict with NAC boundary defaults if keys are absent."""
+        """Fill architecture dict with boundary + bridge defaults."""
         defaults = {
             "hardware": {
                 "rydberg_radius_um": 5.0,
@@ -103,6 +105,26 @@ class Compiler:
                 {k: v for k, v in vals.items()
                  if k not in self.architecture.get(section, {})}
             )
+
+        # Override routing defaults with BR-keep-vs-move bridge values
+        bridge_path = Path(__file__).resolve().parent.parent / "bridges" / "BR-keep-vs-move.yaml"
+        if bridge_path.exists():
+            try:
+                import yaml as _yaml
+                bridge = _yaml.safe_load(bridge_path.read_text(encoding="utf-8"))
+                resolve = bridge.get("resolve_fn", {})
+                alpha = resolve.get("params", {}).get("alpha")
+                if alpha is not None:
+                    self.architecture["routing"]["idle_cost_alpha"] = float(alpha)
+                strategies = resolve.get("params", {}).get("strategies", {})
+                if strategies and self.routing_strategy not in strategies:
+                    default = resolve.get("default_strategy", "baseline")
+                    print(f"  [NAC] routing_strategy={self.routing_strategy!r} "
+                          f"not in bridge strategies {list(strategies)}, "
+                          f"falling back to {default!r}")
+                    self.routing_strategy = default
+            except Exception:
+                pass  # bridge YAML is advisory; architecture defaults suffice
 
     def _load_benchmark(self, benchmark_dir: str = "benchmark"):
         """Load QASM, transpile to CZ basis, extract flat gate list."""
