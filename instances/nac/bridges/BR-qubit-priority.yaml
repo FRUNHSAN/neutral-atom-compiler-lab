@@ -1,0 +1,23 @@
+# BR-qubit-priority — which qubits get priority for entanglement zone slots
+#
+# Qubits that participate in many gates (especially early-stage gates) should be
+# placed closer to entanglement zone. The placer assigns weights based on
+#   weight[q] = sum_{stage} 1/(stage+1) * I[q participates in stage]
+# Higher-weight qubits get first pick of storage sites.
+
+id: BR-qubit-priority
+name: "Qubit priority for entanglement zone assignment"
+type: priority
+mode: independent
+layer: instance
+
+source: C-qc-slot-assignment
+target: C-qc-transport
+
+mediation: "weighted by gate-participation frequency, favoring early stages"
+
+resolve_fn:
+  name: weighted_priority
+  params:
+    weight_formula: "sum_{stage} 1/(stage+1) * I[q in stage]"
+    sort: "descending"           # highest weight gets first pick

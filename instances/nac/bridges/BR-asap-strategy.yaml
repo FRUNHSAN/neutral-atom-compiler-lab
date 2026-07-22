@@ -1,0 +1,23 @@
+# BR-asap-strategy — ASAP scheduling variant
+#
+# Two strategies for scheduling single-qubit gates relative to two-qubit stages:
+#   separate: schedule all 2q gates first (by ASAP), then slot 1q gates around them
+#   joint:    schedule all gates (1q and 2q) together by ASAP
+#
+# "separate" is the default — it preserves 2q-stage groupings which matter for fidelity.
+
+id: BR-asap-strategy
+name: "ASAP scheduling: separate vs joint 1q/2q stages"
+type: merge
+mode: independent
+layer: instance
+
+source: C-qc-depth
+target: C-qc-crosstalk
+
+mediation: "asap_separate: 2q stages first, then fit 1q around them"
+
+resolve_fn:
+  name: fixed_choice
+  params:
+    strategy: "asap_separate"    # can also be "asap_joint"

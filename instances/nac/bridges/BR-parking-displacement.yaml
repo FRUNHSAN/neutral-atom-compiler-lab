@@ -1,0 +1,22 @@
+# BR-parking-displacement — parking sidestep strategy for AOD collision resolution
+#
+# When two atoms would collide during AOD movement (same-column destinations crossing),
+# one atom performs a lateral "parking" displacement to clear the path.
+# Parking distance and which atom parks are determined here.
+
+id: BR-parking-displacement
+name: "Parking displacement strategy for AOD collisions"
+type: degrade
+mode: independent
+layer: instance
+
+source: C-qc-parking
+target: C-qc-transport
+
+mediation: "greedy parking: sidestep by PARKING_DIST, then restore after main move"
+
+resolve_fn:
+  name: greedy_parking
+  params:
+    parking_dist_um: 1           # lateral displacement per parking step
+    strategy: "nearest_available" # which site to park into

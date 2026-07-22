@@ -1,0 +1,23 @@
+# BR-parallel-vs-distance — balance parallel gate execution vs movement distance
+#
+# When placing qubits, the placer scores each candidate site by
+#   score = parallel_priority_weight * conflicts + distance
+# Higher weight → favors parallel moves (fewer conflicts).
+# Lower weight → favors shorter moves (less distance).
+
+id: BR-parallel-vs-distance
+name: "Parallelism priority vs movement distance"
+type: tension
+mode: independent
+layer: instance
+
+source: C-qc-bandwidth
+target: C-qc-transport
+
+mediation: "weighted sum: score = lambda_par * conflicts + distance"
+
+resolve_fn:
+  name: weighted
+  params:
+    lambda_par: 1000.0           # parallel priority weight
+    lookahead: 3                  # initial mapping lookahead stages

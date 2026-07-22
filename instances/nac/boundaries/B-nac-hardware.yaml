@@ -1,0 +1,65 @@
+# B-nac-hardware — Neutral Atom Compiler hardware boundary
+#
+# Maps ZAP architecture/default.json into framework boundary format.
+# Parameters from architecture JSON's operation_fidelity, qubit_spec, routing sections.
+# Formal constraints referenced: C-qc-crosstalk, C-qc-transport, C-qc-decoherence, C-qc-connectivity.
+
+id: B-nac-hardware
+name: "NAC zone-architecture hardware"
+constraint: C-qc-crosstalk
+stage: reduced
+
+assumptions:
+  - "Dual-zone architecture (storage + entanglement), AOD-mediated transfer"
+  - "Entanglement zone Rydberg laser is global (all sites exposed simultaneously)"
+  - "SLM generates static traps; AOD moves atoms along rows/columns"
+  - "Rb-87 atoms, R_blockade ~ 5 um, T2 ~ 1.5e6 us (Bluvstein 2024)"
+  - "Atoms are identical and indistinguishable"
+
+# Cost terms correspond to the three compiler-sensitive fidelity channels
+cost_terms:
+  L_xtalk:
+    formula: "(-ln f_2q_idle) * N_idle_exposures"
+    params:
+      f_2q_idle: 0.9975          # 1 - (1 - 0.995)/2, conservative approx
+      N_idle_exposures: 0         # filled at runtime per benchmark
+
+  L_tr:
+    formula: "(-ln f_tr) * N_transfers"
+    params:
+      f_tr: 0.999                 # atom transfer fidelity (Bluvstein 2024)
+
+  L_dec:
+    formula: "T_idle / T2"
+    params:
+      T2: 1.5e6                   # coherence time, microseconds (Rb n~70)
+      T_idle: 0                    # filled at runtime per qubit
+
+# Cost groups represent opposing strategies
+cost_groups:
+  L_stay: [L_xtalk]              # keep idle qubits → crosstalk penalty
+  L_move: [L_tr, L_dec]          # move to storage → transfer + decoherence penalty
+
+# Hardware architecture parameters (mirror architecture/default.json)
+hardware:
+  zone_layout:
+    storage_sites: 80            # 8×10 grid, 6um×6um spacing
+    entanglement_pairs: 80       # 8×10 grid, 12um×6um spacing (pairs)
+    rydberg_radius_um: 5
+
+  aod:
+    mode: "row-column"           # AOD moves entire rows or columns
+    parking: true                # parking sidestep for collision avoidance
+    parking_dist_um: 1
+
+  timing_us:
+    atom_transfer: 15            # activate/deactivate duration
+    gate_2q: 0.25                # CZ gate duration
+    gate_1q: 0.5                 # single-qubit gate duration
+    movement_accel: 0.00275      # um/us^2, symmetric acceleration model
+    movement_avg_velocity: 0.55  # um/us
+
+  routing:
+    parallel_priority_weight: 1000.0
+    initial_mapping_parallel_lookahead: 3
+    idle_cost_alpha: 1.0
