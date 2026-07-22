@@ -7,8 +7,9 @@
 
 id: BR-qubit-priority
 name: "Qubit priority for entanglement zone assignment"
-type: priority
+type: tension
 mode: independent
+domain_tags: [quantum-compiler]
 layer: instance
 
 source: C-qc-slot-assignment
@@ -16,8 +17,7 @@ target: C-qc-transport
 
 mediation: "weighted by gate-participation frequency, favoring early stages"
 
-resolve_fn:
-  name: weighted_priority
-  params:
-    weight_formula: "sum_{stage} 1/(stage+1) * I[q in stage]"
-    sort: "descending"           # highest weight gets first pick
+resolve_fn: weighted
+resolve_params:
+  weight_formula: "sum_{stage} 1/(stage+1) * I[q in stage]"
+  sort: "descending"

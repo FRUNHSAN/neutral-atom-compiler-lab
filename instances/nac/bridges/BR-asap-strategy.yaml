@@ -8,8 +8,9 @@
 
 id: BR-asap-strategy
 name: "ASAP scheduling: separate vs joint 1q/2q stages"
-type: merge
+type: tension
 mode: independent
+domain_tags: [quantum-compiler]
 layer: instance
 
 source: C-qc-depth
@@ -17,7 +18,6 @@ target: C-qc-crosstalk
 
 mediation: "asap_separate: 2q stages first, then fit 1q around them"
 
-resolve_fn:
-  name: fixed_choice
-  params:
-    strategy: "asap_separate"    # can also be "asap_joint"
+resolve_fn: compare
+resolve_params:
+  strategy: "asap_separate"

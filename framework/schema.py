@@ -64,6 +64,10 @@ class Constraint:
     G_C: float = 0.0
     derives_from: list[str] = field(default_factory=list)
     status: str = "active"
+    # 可执行约束断言（§10.3）
+    # rigidity=hard + stage≥enforced 时，check 必须非空。
+    # 格式: {"fn": "domain.formulas.aod.validate_row_direction", "on": "each_move"}
+    check: Optional[dict] = None
     # AI 协作者元数据（三元架构 — Doc 31）
     ai_confidence: str = ""        # HIGH / MEDIUM / LOW / UNREVIEWED
     last_ai_review: str = ""       # YYYY-MM-DD

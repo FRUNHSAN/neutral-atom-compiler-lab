@@ -3,6 +3,7 @@ derives_from:
 - C-qc-transport
 - C-qc-decoherence
 id: BR-keep-vs-move
+domain_tags: [quantum-compiler]
 layer: instance
 mediation: compare crosstalk vs transport+decoherence per idle qubit
 mode: coupled
@@ -10,16 +11,15 @@ name: Keep vs move — idle qubit crosstalk trade-off
 produces_invariants:
 - Dynamic strategy never worse than always_move (verified on 14 benchmarks)
 - Eq.15 reduces decision space from 2^(N*stages) to 1 deterministic path
-resolve_fn:
+resolve_fn: compare
+resolve_params:
+  alpha: 1.0
+  strategies:
+    always_move: force move to storage
+    always_stay: keep in entanglement zone
+    baseline: compare and decide per-qubit
+    lookahead: compare and decide per-qubit
   default_strategy: baseline
-  name: compare_log_costs
-  params:
-    alpha: 1.0
-    strategies:
-      always_move: force move to storage
-      always_stay: keep in entanglement zone
-      baseline: compare and decide per-qubit
-      lookahead: compare and decide per-qubit
 source: L_stay
 target: L_move
 type: tension

@@ -95,6 +95,10 @@ def check_all(project_root: str) -> tuple[list[str], list[str], list[str]]:
     # ── S10: Reasoning chain integrity ────────────────
     _s10_chain_integrity(project_root, constraints, all_boundaries, all_bridges, failures, info)
 
+    # ── W: Check field compliance (§10.3) ──────────────
+    _w1_check_field_required(constraints, warnings)
+    _w2_check_fn_resolvable(constraints, project_root, warnings)
+
     # ── I: Info ──────────────────────────────────────
     _i1_hard_constraint_coverage(constraints, all_boundaries, info)
     _i2_bridge_sensitivity(all_bridges, info)
@@ -479,6 +483,53 @@ def _s10_chain_integrity(project_root, constraints, boundaries, bridges, failure
 
 
 # ── I1-I4: Info ─────────────────────────────────────────
+
+# ── W1-W2: Check field compliance (§10.3) ──────────────
+
+def _w1_check_field_required(constraints, warnings):
+    """W1: rigidity=hard + stage≥enforced → check 字段必须非空."""
+    for cid, c in constraints.items():
+        if c.rigidity.value == "hard" and c.stage.value in ("enforced", "implemented"):
+            if not c.check:
+                warnings.append(
+                    f"W1: constraint '{cid}' is hard+enforced but has no check field. "
+                    f"Add 'check: {{fn: domain.formulas.xxx.fn_name, on: each_xxx}}' "
+                    f"to make the formal executable."
+                )
+
+
+def _w2_check_fn_resolvable(constraints, project_root, warnings):
+    """W2: check.fn 路径可解析，模块存在且函数可导入."""
+    for cid, c in constraints.items():
+        if not c.check or not c.check.get("fn"):
+            continue
+        fn_ref = c.check["fn"]  # e.g. "domain.formulas.aod.validate_row_direction"
+        parts = fn_ref.split(".")
+        if len(parts) < 2:
+            warnings.append(f"W2: '{cid}' check.fn '{fn_ref}' — invalid format, expected module.path.function")
+            continue
+        # Try to import the module
+        mod_path = ".".join(parts[:-1])
+        fn_name = parts[-1]
+        mod_file = parts[-2] if len(parts) >= 2 else ""
+        mod_full = os.path.join(project_root, *mod_path.split(".")) + ".py"
+        if not os.path.exists(mod_full):
+            warnings.append(
+                f"W2: '{cid}' check.fn '{fn_ref}' — module file not found: {mod_full}"
+            )
+        else:
+            try:
+                mod = __import__(mod_path, fromlist=[fn_name])
+                if not hasattr(mod, fn_name):
+                    warnings.append(
+                        f"W2: '{cid}' check.fn '{fn_ref}' — function '{fn_name}' "
+                        f"not found in module '{mod_path}'"
+                    )
+            except ImportError as e:
+                warnings.append(
+                    f"W2: '{cid}' check.fn '{fn_ref}' — cannot import: {e}"
+                )
+
 
 def _i1_hard_constraint_coverage(constraints, boundaries, info):
     covered = {b.constraint for b in boundaries.values() if b.constraint}

@@ -9,6 +9,7 @@ id: BR-idle-cost-alpha
 name: "Idle cost weight: decoherence vs transfer trade-off"
 type: tension
 mode: independent
+domain_tags: [quantum-compiler]
 layer: instance
 
 source: C-qc-decoherence
@@ -16,8 +17,7 @@ target: C-qc-transport
 
 mediation: "alpha * decoherence_cost weighted against transfer_cost"
 
-resolve_fn:
-  name: fixed_alpha
-  params:
-    alpha: 1.0                   # default equal weighting
-    range: [0.1, 10.0]
+resolve_fn: compare
+resolve_params:
+  alpha: 1.0
+  range: [0.1, 10.0]

@@ -6,8 +6,9 @@
 
 id: BR-parking-displacement
 name: "Parking displacement strategy for AOD collisions"
-type: degrade
+type: tension
 mode: independent
+domain_tags: [quantum-compiler]
 layer: instance
 
 source: C-qc-parking
@@ -15,8 +16,7 @@ target: C-qc-transport
 
 mediation: "greedy parking: sidestep by PARKING_DIST, then restore after main move"
 
-resolve_fn:
-  name: greedy_parking
-  params:
-    parking_dist_um: 1           # lateral displacement per parking step
-    strategy: "nearest_available" # which site to park into
+resolve_fn: compare
+resolve_params:
+  parking_dist_um: 1
+  strategy: "nearest_available"

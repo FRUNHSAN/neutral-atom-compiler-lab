@@ -10,6 +10,14 @@ from dataclasses import dataclass, field
 
 
 @dataclass
+class PreTestResult:
+    """pre_test() 的返回值。PASS = 解通过了所有硬墙。BLOCKED = 至少一条硬约束被破坏。"""
+    passed: bool
+    blocked_by: str = ""
+    reason: str = ""
+
+
+@dataclass
 class Solution:
     """求解器返回的统一结果。"""
     decisions: dict[str, int] = field(default_factory=dict)
@@ -45,3 +53,43 @@ class SolverAdapter(ABC):
             timeout_ms: 超时阈值
         """
         ...
+
+
+def pre_test(instructions: list[dict], constraints: list) -> PreTestResult:
+    """硬约束的可执行断言。每一步 proposal 过它——全 PASS 放行，有一条 FAIL 退回 solver。
+
+    Args:
+        instructions: router 输出的指令列表
+        constraints: 约束对象列表（framework.schema.Constraint），带 check 字段
+
+    Returns:
+        PreTestResult(passed=True) 或 PreTestResult(passed=False, blocked_by=cid, reason=...)
+    """
+    for c in constraints:
+        if not c.check or not c.rigidity:
+            continue
+        if c.rigidity.value != "hard":
+            continue
+        fn_ref = c.check.get("fn")
+        if not fn_ref:
+            continue
+        parts = fn_ref.split(".")
+        mod_path = ".".join(parts[:-1])
+        fn_name = parts[-1]
+        try:
+            mod = __import__(mod_path, fromlist=[fn_name])
+            fn = getattr(mod, fn_name)
+            result = fn(instructions)
+            if not result.passed:
+                return PreTestResult(
+                    passed=False,
+                    blocked_by=c.id,
+                    reason=result.reason,
+                )
+        except (ImportError, AttributeError) as e:
+            return PreTestResult(
+                passed=False,
+                blocked_by=c.id,
+                reason=f"Cannot load check function '{fn_ref}': {e}",
+            )
+    return PreTestResult(passed=True)

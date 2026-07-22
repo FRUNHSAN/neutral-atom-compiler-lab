@@ -26,6 +26,7 @@ def load_constraint(yaml_path: str) -> Constraint:
         G_C=d.get("G(C)", 0.0),
         derives_from=d.get("derives_from", []),
         status=d.get("status", "active"),
+        check=d.get("check"),
         ai_confidence=d.get("ai_confidence", ""),
         last_ai_review=d.get("last_ai_review", ""),
         ai_review_notes=d.get("ai_review_notes", ""),

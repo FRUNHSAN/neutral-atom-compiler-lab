@@ -112,13 +112,13 @@ class Compiler:
             try:
                 import yaml as _yaml
                 bridge = _yaml.safe_load(bridge_path.read_text(encoding="utf-8"))
-                resolve = bridge.get("resolve_fn", {})
-                alpha = resolve.get("params", {}).get("alpha")
+                resolve_params = bridge.get("resolve_params", {})
+                alpha = resolve_params.get("alpha")
                 if alpha is not None:
                     self.architecture["routing"]["idle_cost_alpha"] = float(alpha)
-                strategies = resolve.get("params", {}).get("strategies", {})
+                strategies = resolve_params.get("strategies", {})
                 if strategies and self.routing_strategy not in strategies:
-                    default = resolve.get("default_strategy", "baseline")
+                    default = resolve_params.get("default_strategy", "baseline")
                     print(f"  [NAC] routing_strategy={self.routing_strategy!r} "
                           f"not in bridge strategies {list(strategies)}, "
                           f"falling back to {default!r}")

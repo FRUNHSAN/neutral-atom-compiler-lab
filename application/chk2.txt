@@ -1,0 +1,5 @@
+FAIL=0 WARN=4 INFO=17
+W: W1: constraint 'C-qc-bandwidth' is hard+enforced but has no check field. Add 'check: {fn: domain.formulas.xxx.fn_name, on: each_xxx}' to make the formal executable.
+W: W1: constraint 'C-qc-connectivity' is hard+enforced but has no check field. Add 'check: {fn: domain.formulas.xxx.fn_name, on: each_xxx}' to make the formal executable.
+W: W1: constraint 'C-qc-fidelity' is hard+enforced but has no check field. Add 'check: {fn: domain.formulas.xxx.fn_name, on: each_xxx}' to make the formal executable.
+W: W1: constraint 'C-qc-slot-assignment' is hard+enforced but has no check field. Add 'check: {fn: domain.formulas.xxx.fn_name, on: each_xxx}' to make the formal executable.

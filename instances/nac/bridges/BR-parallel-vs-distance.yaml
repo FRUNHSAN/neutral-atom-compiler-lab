@@ -9,6 +9,7 @@ id: BR-parallel-vs-distance
 name: "Parallelism priority vs movement distance"
 type: tension
 mode: independent
+domain_tags: [quantum-compiler]
 layer: instance
 
 source: C-qc-bandwidth
@@ -16,8 +17,7 @@ target: C-qc-transport
 
 mediation: "weighted sum: score = lambda_par * conflicts + distance"
 
-resolve_fn:
-  name: weighted
-  params:
-    lambda_par: 1000.0           # parallel priority weight
-    lookahead: 3                  # initial mapping lookahead stages
+resolve_fn: weighted
+resolve_params:
+  lambda_par: 1000.0
+  lookahead: 3

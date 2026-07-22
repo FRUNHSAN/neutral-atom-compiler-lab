@@ -12,3 +12,6 @@ domain_tags: [quantum-compiler]
 G(C): 0.7
 derives_from: [C-qc-aod-routing]
 status: active
+check:
+  fn: domain.formulas.aod.detect_path_crossing
+  on: each_move_pair
