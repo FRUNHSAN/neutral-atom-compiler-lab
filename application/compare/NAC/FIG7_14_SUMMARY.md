@@ -9,6 +9,6 @@
 | Fig.9 | 编译器依赖通道 | F_idle×F_tr×F_dec | 同度量 | NAC 偏 F_tr (少搬、快)、ZAP 偏 F_idle (少串扰)，同一 trade-off 的两个方向 |
 | Fig.10 | 执行时间 | ZAP baseline | NAC 系统性偏短 10-37% | alpha=1.0 偏"留着"，少搬运 → 快执行；ZAP alpha≈0.7 偏"搬回" |
 | Fig.11 | 编译时间(14bench) | <0.3s | 0.02-0.3s (小电路慢 2-3×) | Python 常数开销；但 sat_n11/vqc_n15 等密集电路持平 (<0.3s) |
-| Fig.12 | 可扩展性(→500q) | Ising: 0.6→30s O(N)；QFT: N=150 316s → N=200 1212s (20min) | Ising: 1.3→50s O(N)；QFT: N=150 31.5s O(N) | Ising: NAC 慢 2-3×；Cat: NAC 快 5× @200q；Adder: N=64 交叉，N=136 NAC 快 3× (18s vs 61s)；QFT: N=150 NAC 快 10× (32s vs 316s) |
+| Fig.12 | 可扩展性(→500q) | Ising: 0.6→30s O(N)；QFT: N=150 316s → N=200 1212s (20min) | Ising: 1.3→50s O(N)；QFT: N=150 31.5s O(N) | Ising: NAC 慢 2-3×；Cat: NAC 快 5× (at 200q)；Adder: N=64 交叉，N=136 NAC 快 3× (18s vs 61s)；QFT: N=150 NAC 快 10× (32s vs 316s) |
 | Fig.13 | 消融(3策略) | baseline≈always_move | baseline 居间：stay 最快/move 最慢；执行时间 1-47ms | NAC alpha=1.0 偏 stay，baseline < always_move (同 ZAP 方向)，但 ZAP alpha≈0.7 让 baseline 更接近 move |
-| Fig.14 | 灵敏度热力图 (qft_n10) | ZAP vs PowerMove ERR | baseline vs always_move ERR | ERR 全负 ≈ -0.1 @默认参数(★)；f_tr↑→ERR→0 (搬运便宜则 Dynamic→AlwaysMove)；f_tr↓→ERR 最负 -0.17 |
+| Fig.14 | 灵敏度热力图 (qft_n10) | ZAP vs PowerMove ERR | baseline vs always_move ERR | ERR 全负 ≈ -0.1 (at 默认参数 ★)；f_tr↑→ERR→0 (搬运便宜则 Dynamic→AlwaysMove)；f_tr↓→ERR 最负 -0.17 |
