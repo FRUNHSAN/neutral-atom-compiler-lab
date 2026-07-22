@@ -1,5 +1,0 @@
-Hard constraints with check field: 3
-  C-qc-aod-routing: check.fn=domain.formulas.aod.validate_row_direction
-  C-qc-crosstalk: check.fn=domain.formulas.xtalk.entanglement_zone_only
-  C-qc-parking: check.fn=domain.formulas.aod.detect_path_crossing
-pre_test result: passed=True
