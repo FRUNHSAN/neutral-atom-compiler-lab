@@ -81,6 +81,29 @@ class Compiler:
                         self.ent_sites.append((x0 + i * sx, y0 + j * sy))
         self.ent_sites = sorted(set(self.ent_sites))
 
+    def _merge_hardware_defaults(self):
+        """Fill architecture dict with NAC boundary defaults if keys are absent."""
+        defaults = {
+            "hardware": {
+                "rydberg_radius_um": 5.0,
+            },
+            "movement": {
+                "time_coefficient": 200.0,
+                "reference_distance": 110.0,
+            },
+            "routing": {
+                "parking_dist": 1,
+                "parallel_priority_weight": 1000.0,
+                "initial_mapping_parallel_lookahead": 3,
+                "idle_cost_alpha": 1.0,
+            },
+        }
+        for section, vals in defaults.items():
+            self.architecture.setdefault(section, {}).update(
+                {k: v for k, v in vals.items()
+                 if k not in self.architecture.get(section, {})}
+            )
+
     def _load_benchmark(self, benchmark_dir: str = "benchmark"):
         """Load QASM, transpile to CZ basis, extract flat gate list."""
         bench_path = Path(benchmark_dir) / self.benchmark
@@ -145,6 +168,9 @@ class Compiler:
         scheduler = Scheduler(self.g_q, self.n_q, self.scheduling_strategy)
         list_gates = scheduler.as_gate_list()
         print(f"  [NAC] {scheduler.num_stages} stages")
+
+        # Merge hardware defaults from boundary into architecture dict
+        self._merge_hardware_defaults()
 
         # Stage 2: place + route
         print(f"  [NAC] placing+routing ({self.routing_strategy})…")

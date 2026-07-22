@@ -8,13 +8,12 @@ BR-parallel-vs-distance (parallelism weight).
 import math
 import numpy as np
 
-R_BLOCKADE = 5  # um, Rydberg interaction radius
-
-# ── movement duration (shared heuristic with router) ──────────────────
-def movement_duration_um(d: float) -> float:
+# ── movement duration (configurable, shared with router) ─────────────
+def movement_duration_um(d: float, coeff: float = 200.0,
+                         ref_dist: float = 110.0) -> float:
     if d <= 0:
         return 0.0
-    return 200.0 * ((d / 110.0) ** 0.5)
+    return coeff * ((d / ref_dist) ** 0.5)
 
 
 class Placer:
@@ -38,6 +37,12 @@ class Placer:
         arch = architecture or {}
         op_fid = arch.get("operation_fidelity", {})
         routing_cfg = arch.get("routing", {})
+        move_cfg = arch.get("movement", {})
+        hw = arch.get("hardware", {})
+
+        self.rydberg_radius = float(hw.get("rydberg_radius_um", 5.0))
+        self.move_coeff = float(move_cfg.get("time_coefficient", 200.0))
+        self.move_ref_dist = float(move_cfg.get("reference_distance", 110.0))
 
         f2 = op_fid.get("two_qubit_gate", 0.995)
         self.fidelity_2q_idle = 1.0 - (1.0 - f2) / 2.0
@@ -47,11 +52,11 @@ class Placer:
         self.lookahead = int(routing_cfg.get("initial_mapping_parallel_lookahead", 3))
         self.alpha = float(routing_cfg.get("idle_cost_alpha", 1.0))
 
-        # Build all valid entanglement pairs (distance < R_BLOCKADE)
+        # Build all valid entanglement pairs (distance < self.rydberg_radius)
         self.all_pairs = [
             (a, b) for i, a in enumerate(self.ent_slm_sites)
             for j, b in enumerate(self.ent_slm_sites)
-            if i < j and math.dist(a, b) < R_BLOCKADE
+            if i < j and math.dist(a, b) < self.rydberg_radius
         ]
 
         # Init mapping
@@ -212,7 +217,7 @@ class Placer:
 
             best = min(candidates, key=lambda s: math.dist(s, self.current_mapping[q]))
             dist_out = math.dist(self.current_mapping[q], best)
-            approx_move_time = 0.5 * n_transfers * movement_duration_um(dist_out)
+            approx_move_time = 0.5 * n_transfers * movement_duration_um(dist_out, self.move_coeff, self.move_ref_dist)
             decoherence_cost = (self.n_q - 1) * approx_move_time / self.time_coherence
 
             move_cost = transfer_cost + self.alpha * decoherence_cost

@@ -25,6 +25,7 @@ class Router:
         routing_strategy: str = "baseline",
     ):
         arch = architecture or {}
+        self.architecture = arch
         op_dur = arch.get("operation_duration", {})
         routing_cfg = arch.get("routing", {})
 
@@ -129,11 +130,14 @@ class Router:
         for q in qs:
             self.current_mapping[q] = end_locs[q]
 
-    @staticmethod
-    def _move_time(d: float) -> float:
+    def _move_time(self, d: float) -> float:
         if d <= 0:
             return 0.0
-        return 200.0 * ((d / 110.0) ** 0.5)
+        coeff = float(self.architecture.get("movement", {}).get(
+            "time_coefficient", 200.0))
+        ref = float(self.architecture.get("movement", {}).get(
+            "reference_distance", 110.0))
+        return coeff * ((d / ref) ** 0.5)
 
     # ═══ AOD physics ═══════════════════════════════════════════════
     # Constraint C-qc-aod-routing: same-row → same dx sign; same-col → same dy sign
