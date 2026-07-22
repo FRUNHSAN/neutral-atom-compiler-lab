@@ -1,0 +1,5 @@
+QFT n=10... 2.135s
+QFT n=50... 4.510s
+QFT n=100... 12.959s
+QFT n=150... 31.519s
+Done. 4 points saved
