@@ -77,23 +77,21 @@ baselines/ZAC/zac/simulator/simulator.py:
 
 论文的 Fig.12 展示 QFT 在 ZAP 上的编译时间从 N=10 线性增长到 N=500。
 
-我们在复现中发现：QFT N=100 的 QASM 3.0 文件包含 ~10,000 个门声明。`qiskit_qasm3_import.parse()` 需要 2+GB 内存并创建巨大 QuantumCircuit 对象。N=200 时已超出 60GB 磁盘的可用内存（exit code 120）。
+我们在复现中发现：QFT N=100 的 QASM 3.0 文件包含 ~10,000 个门声明。`qiskit_qasm3_import.parse()` 需要 2+GB 内存并创建巨大 QuantumCircuit 对象。
 
-N=500 QFT 的 QASM→CZ transpile 在这个物理机器上不可行——但这**不是 ZAP 的问题**。transpile 是所有编译器共享的预处理步骤。
+**实际结果**：QFT N=10 (0.6s), N=50 (3.0s), N=100 (26.5s), N=150 (500s), N=200 (后台跑通~1500s)。N=150+ 的瓶颈在 QASM3 parse 的内存分配，非 ZAP scheduler。论文 Fig.12 的 QFT N=500 数据点依赖更大内存的机器。
 
 **论文把 transpile + compile 的时间归因成了"ZAP compile time"**。如果 transpile 对 N=500 QFT 需要 5 分钟（在更大机器上），论文的 Fig.12 标注"ZAP: O(N)"就隐含了 transpile 时间——这不是 ZAP 的特性，是 Qiskit 的特性。
 
 ---
 
-## 6. 170→0 的根本原因暴露了一个 design smell
+## 6. hash() 非确定性——stress test 在任何机器上不可复现
 
-我们中最先发现的 `hash()` 非确定性→stress test 数字不一致的问题，根因是 ZAP 的 stress test 用 `hash(circuit_type)` 做分类。
+ZAP 的 stress test 使用 `hash(circuit_type)` 做分组统计。Python 3.3+ 全系列开启 `PYTHONHASHSEED=random`——同一电路在不同进程里 hash 到不同整数。stress test 数字在同一进程内一致（170），跨进程随机变化（161/168/127/170）。
 
-修成 `zlib.crc32()` 后数字确定了。但这个 bug 暴露出一个更深的问题：
+**修复**：`hash()` → `zlib.crc32()`，跨进程确定性。修在 `experiments/strategy_compare.py` 和 `tight_slot_compare.py`，未修改 baselines/。
 
-**`hash()` 在所有 Python 3 版本中都是非确定性的（PYTHONHASHSEED=random）。这意味着 ZAP 的 stress test 在任何一台机器上的结果都是不可复现的——即使同一个 commit、相同 Python 版本。**
-
-这是一个"论文声称可复现但实际不可复现"的硬证据。不是理论问题，不是参数偏差——是代码级事实。
+**但 PYTHONHASHSEED 不影响 ZAP fidelity 计算结果**——四个独立进程、四种 seed、六位小数完全一致。fidelity 路由是确定性的。hash 随机化只影响 stress test 的分组统计，不影响论文里的任何 fidelity 数字。
 
 ---
 
@@ -105,7 +103,8 @@ N=500 QFT 的 QASM→CZ transpile 在这个物理机器上不可行——但这*
 | 统一的 fidelity 后处理脚本 | 跨编译器对比无法独立复现（ZAC f_idle=1.0 就是证据） |
 | 14 个 benchmark 的精确 fidelity 表 | 只能靠肉眼从柱状图读数（±0.02） |
 | PowerMove 可运行的环境配置 | 10/14 benchmark 在当前环境下崩 |
-| QFT N>100 的 transpile 中间产物 | QFT scalibility 数据无法复现 |
+| QFT N>100 的 transpile 中间产物 | QFT scalability 数据无法复现 |
+| `f_1q` 参数值 | 0.9997，仅在架构 JSON 中，正文未给出——用错会算出 F_wo_1q > 1 |
 
 ---
 
@@ -126,15 +125,49 @@ N=500 QFT 的 QASM→CZ transpile 在这个物理机器上不可行——但这*
 
 ---
 
+## 9. NAC 约束式编译器——从复现到独立实现
+
+在 ZAP 复现基础上，构建了约束式工程编译器 NAC (~500 行)，不调 ZAP API。
+
+**架构**：
+- `domain/constraints/`：10 条物理约束（不变）
+- `domain/formulas/fidelity.py`：统一 fidelity 公式（Eq.4, 5 通道分解）
+- `instances/nac/boundaries/B-nac-hardware.yaml`：zone 架构硬件参数
+- `instances/nac/bridges/`：6 座桥——将编译器的决策点形式化为约束张力 + 消解策略
+- `instances/nac/implementation/`：scheduler + placer + router + simulator + compiler
+
+**关键数字**：
+- 14/14 benchmark 全通，F_2q 与 ZAP 100% 一致
+- 13/14 fidelity delta 在 ±5% 内（ising_n26: 0.0%）
+- sat_n11 +6.4%（唯一超 ±5%），根因已定位：Eq.15 site 选择阈值差异
+- 三编译器 fidelity 交叉验证：ZAP (14/14 PASS), ZAC (14/14 PASS, f_idle=1.0 口径差异), NAC (14/14 PASS)
+- Enola (2/5 可运行), PowerMove (4/14 可运行，Vizing bug 限制)
+
+**编译器无关性**：同一桥的分析方法可跨编译器迁移——Enola（单区架构）、ZAC（模拟退火迭代）、PowerMove（含 FTQC 编译）各自面对相同的物理约束张力，仅需替换编译器特定的 adapter 注入点。
+
+**确定性可复现实验栈**：`zlib.crc32` 替代 `hash()` + PYTHONHASHSEED 隔离验证（4 seed × 相同输出）。7 实验脚本 | 5 张可视化图表 | 4 篇技术文档 | 3 条公开推理链。
+
+**已知缺陷**：
+- 三条物理约束的 formal 字段未与 implementation 链路接通（YAML 中文注释 vs 代码执行）
+- fidelity 模型假设错误独立——五个物理过度简化：
+  - 搬运-退相干耦合（未建模）
+  - 阻塞概率性（未建模）
+  - f_tr 空间依赖性（假设均匀）
+  - SLM 不均匀（假设所有 site 等价）
+  - 串扰空间依赖（假设全局 Rydberg 激光均匀暴露）
+- 六桥中仅 keep-vs-move 有完整的 NAC vs ZAP 性能对比数据
+
+---
+
 ## 结论性判断
 
-**这篇论文在它自己的框架内是正确的。**所有方向性结论（ZAP 更快更好、动态策略有效、退相干主导）被独立验证。工程实现确实在 >99% 的情况下是确定性的。
+**这篇论文在它自己的框架内是正确的。**所有方向性结论（ZAP 更快更好、动态策略有效、退相干主导）被独立验证——既通过原始 ZAP 代码（224 次运行），也通过独立构建的 NAC 约束式编译器（14/14 benchmark 全通，F_2q 100% 一致）。
 
 **但它的可复现性没有它声称的那么好。**主要体现在：
 1. 跨编译器对比依赖未公开的 fidelity 后处理层
 2. 第三方编译器（PowerMove、Enola）的环境锁不存在
 3. 精确数值只有 1/14 benchmark 显式给出
 4. transpile 时间被混入"ZAP compile time"
-5. stress test 用 `hash()`——任何机器上的数字都不一样
+5. `f_1q = 0.9997` 不在正文中，用错会导致 F_wo_1q > 1
+6. 仓库代码在论文发表后有改动（ZAP 源码版本 ≠ 论文运行时版本）
 
-**这不是"撤回论文"级别的缺陷。**但是"需要附加上下文才能复现"级别的缺陷。任何声称"我们验证了 ZAP 论文"的人，如果没遇到这五个问题中的至少三个，说明他们没有真正跑过。
