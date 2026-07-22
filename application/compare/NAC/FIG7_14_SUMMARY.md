@@ -1,12 +1,14 @@
 # ZAP vs NAC — Fig.7 ~ Fig.14 对比总表
 
+> 更新：2026-07-22 | 策略：`asap_separate` | 架构：`scale_to_500.json` | benchmark：同一套 QASM 文件
+
 | 图 | 内容 | ZAP | NAC | 关键差异 |
 |---|---|---|---|---|
-| Fig.7 | 保真度分解(14bench) | F_2q/F_idle/F_tr/F_dec堆叠 | 同公式,F_2q 100%一致 | 13/14 +-5%, sat_n11 +6.4% |
-| Fig.8 | 随机3-正则scaling | N=10->100 fidelity趋势 | 同趋势,F_tr低5-10% | 随机图无结构,placer权重均匀化 |
-| Fig.9 | 编译器依赖通道 | F_idle x F_tr x F_dec | 同度量 | NAC偏F_tr(少搬),ZAP偏F_idle |
-| Fig.10 | 执行时间 | ZAP baseline | NAC系统性偏短10-37% | alpha=1.0偏留着,少搬->快 |
-| Fig.11 | 编译时间 | <0.3s | 0.02-0.3s(小电路慢2-3x) | Cat/Adder反而快2-5x |
-| Fig.12 | 可扩展性(->500q) | Ising 0.6->30s O(N) | Ising 1.3->50s O(N) | 同O(N),大Cat快5x,大Adder快2x |
-| Fig.13 | 消融(3策略) | baseline ~ always_move | 3策略可切换 | alpha=1.0偏stay,NAC baseline < always_move |
-| Fig.14 | 灵敏度热力图 | ZAP vs PM ERR | baseline vs always_move ERR | ERR全负~-0.1,默认点星标 |
+| Fig.7 | 保真度分解(14bench) | F_2q/F_idle/F_tr/F_dec堆叠 | 同公式，F_2q 14/14 完全一致 | Mean \|delta\|=2.0%，13/14 ±5%；sat_n11 NAC +6.4% (alpha=1.0 反超 ZAP)；wstate_n27 NAC -4.1% (最差偏离) |
+| Fig.8 | 随机3-正则scaling | N=10→100 趋势 | N=10 F=0.83 → N=100 F=0.027 | F_tr 低 5-10%，随机图无结构可 exploit，placer 权重均匀化是根本原因，site 排序修复后无改善 |
+| Fig.9 | 编译器依赖通道 | F_idle×F_tr×F_dec | 同度量 | NAC 偏 F_tr (少搬、快)、ZAP 偏 F_idle (少串扰)，同一 trade-off 的两个方向 |
+| Fig.10 | 执行时间 | ZAP baseline | NAC 系统性偏短 10-37% | alpha=1.0 偏"留着"，少搬运 → 快执行；ZAP alpha≈0.7 偏"搬回" |
+| Fig.11 | 编译时间(14bench) | <0.3s | 0.02-0.3s (小电路慢 2-3×) | Python 常数开销；但 sat_n11/vqc_n15 等密集电路持平 (<0.3s) |
+| Fig.12 | 可扩展性(→500q) | Ising: 0.6→30s O(N)；QFT: N=150 316s → N=200 1212s (20min) | Ising: 1.3→50s O(N)；QFT: N=150 31.5s O(N) | Ising: NAC 慢 2-3×；Cat: NAC 快 5× @200q；Adder: N=64 交叉，N=136 NAC 快 3× (18s vs 61s)；QFT: N=150 NAC 快 10× (32s vs 316s) |
+| Fig.13 | 消融(3策略) | baseline≈always_move | baseline 居间：stay 最快/move 最慢；执行时间 1-47ms | NAC alpha=1.0 偏 stay，baseline < always_move (同 ZAP 方向)，但 ZAP alpha≈0.7 让 baseline 更接近 move |
+| Fig.14 | 灵敏度热力图 (qft_n10) | ZAP vs PowerMove ERR | baseline vs always_move ERR | ERR 全负 ≈ -0.1 @默认参数(★)；f_tr↑→ERR→0 (搬运便宜则 Dynamic→AlwaysMove)；f_tr↓→ERR 最负 -0.17 |
