@@ -223,6 +223,12 @@ def fig14():
     for i in range(len(f_tr_vals)):
         for j in range(len(f_xtalk_vals)):
             ax.text(j, i, f"{err_matrix[i][j]:+.3f}", ha="center", va="center", fontsize=7)
+    # Mark default parameter point (f_tr=0.999, f_xtalk=0.9975)
+    default_i = list(f_tr_vals).index(0.999) if 0.999 in f_tr_vals else None
+    default_j = list(f_xtalk_vals).index(0.9975) if 0.9975 in f_xtalk_vals else None
+    if default_i is not None and default_j is not None:
+        ax.scatter(default_j, default_i, marker='*', s=200, color='black',
+                   edgecolors='white', linewidth=1.5, zorder=10)
     fig.tight_layout()
     fig.savefig(str(OUT / "fig14_sensitivity.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
