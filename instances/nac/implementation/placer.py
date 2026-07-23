@@ -200,8 +200,15 @@ class Placer:
             n_transfers = 2 if next_2q is None else 4
             crosstalk_stages = max(0, idle_end - stage_idx)
 
-            # Costs
-            crosstalk_cost = crosstalk_stages * (-math.log(self.fidelity_2q_idle))
+            # Costs — distance-weighted crosstalk using van der Waals Rydberg interaction
+            active_locs = [self.current_mapping[qq] for qq in gate_qubits_2q]
+            if active_locs:
+                min_d = min(math.dist(self.current_mapping[q], al) for al in active_locs)
+                xtalk_weight = 1.0 / (1.0 + (min_d / self.rydberg_radius) ** 6)
+            else:
+                xtalk_weight = 0.0  # No active Rydberg laser = no crosstalk
+            crosstalk_cost = (crosstalk_stages * xtalk_weight
+                              * (-math.log(self.fidelity_2q_idle)))
             transfer_cost = n_transfers * (-math.log(self.fidelity_atom_transfer))
 
             # Find best storage site
