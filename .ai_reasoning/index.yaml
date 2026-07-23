@@ -38,3 +38,16 @@ chains:
       - C-locked-environment
     cross_domain: false
     domains_verified: []
+
+  - chain_id: 2026-07-23-distance-crosstalk-model
+    title: "NAC 距离依赖串扰：van der Waals 替代二值模型"
+    layer: L1
+    ternary_owner: agent
+    tags: [crosstalk, fidelity-model, van-der-waals, rydberg, physics, placer]
+    status: active
+    produces_invariants:
+      - "串扰强度必须随距离衰减——不可以用二值模型评估 fidelity"
+      - "rydberg_radius 必须从 architecture JSON 读取，禁止硬编码"
+    produces_constraints: []
+    cross_domain: false
+    domains_verified: []

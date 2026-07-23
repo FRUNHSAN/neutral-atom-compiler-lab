@@ -13,4 +13,4 @@
 | Fig.13 | 消融(3策略) | baseline≈always_move | baseline 居间：stay 最快/move 最慢；执行时间 1-47ms | NAC alpha=1.0 偏 stay，baseline < always_move (同 ZAP 方向)，但 ZAP alpha≈0.7 让 baseline 更接近 move |
 | Fig.14 | 灵敏度热力图 (qft_n10) | ZAP vs PowerMove ERR | baseline vs always_move ERR | ERR 全负 ≈ -0.1 (at 默认参数 ★)；f_tr↑→ERR→0 (搬运便宜则 Dynamic→AlwaysMove)；f_tr↓→ERR 最负 -0.17 |
 | — | ASAP策略 (separate vs joint) | asap_joint 快 1.8-3.6× (避免 O(N³) 1q-fitting)；N=150: 315s → 88s | asap_separate 快 1.3× (stage 少 2.8×，router 省工)；N=150: 31s → 41s | **方向相反**：ZAP separate 的 1q-fitting 做跨 qubit 兼容检查（O(N³)），joint 逃过；NAC 不做跨 qubit 检查（O(N)），separate 反而 stage 更少 → router 更快 |
-| ★ | 距离依赖串扰 (van der Waals) | 二值模型：纠缠区内全计数 | 距离衰减 w(d)=1/(1+(d/R_blockade)⁶) | sat_n11: +36.6% F_total；vqc_n15: +39.2%；multiplier_n15: +32.7%；稀疏电路 idle qubit 离活跃对远 → 串扰被高估；cat_n35 几乎不变 |
+| ★ | 距离依赖串扰 (van der Waals) | 二值模型：纠缠区内全计数 | 距离衰减 w(d)=1/(1+(d/R_blockade)⁶) | sat_n11: +56.9% vs ZAP (0.1307 vs 0.0833)；multiplier_n15: +44.1%；vqc_n15: +41.6%；knn_n25: +23.7%。稀疏电路 idle qubit 离活跃对远 → ZAP系统性高估串扰。placer 也用了距离权重做 stay/move。详见 .ai_reasoning/chains/2026-07-23-distance-crosstalk-model.md |
