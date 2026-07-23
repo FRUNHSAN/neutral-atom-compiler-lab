@@ -73,7 +73,9 @@ class Simulator:
                 for i, q in enumerate(qs):
                     self.qubit_busy[q] += dur[i] if i < len(dur) else 0
             elif t == "Crosstalk":
-                self.fidelity_idle *= self.f_2q_idle ** len(qs)
+                # Distance-weighted crosstalk using van der Waals Rydberg interaction
+                xtalk_weight = ins.get("xtalk_weight", float(len(qs)))
+                self.fidelity_idle *= self.f_2q_idle ** xtalk_weight
                 for i, q in enumerate(qs):
                     self.qubit_busy[q] += dur[i] if i < len(dur) else 0
 

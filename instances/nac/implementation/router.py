@@ -28,11 +28,13 @@ class Router:
         self.architecture = arch
         op_dur = arch.get("operation_duration", {})
         routing_cfg = arch.get("routing", {})
+        hw = arch.get("hardware", {})
 
         self.time_atom_transfer = op_dur.get("atom_transfer", 15)
         self.time_2q = op_dur.get("2qGate", 0.25)
         self.time_1q = op_dur.get("1qGate", 0.5)
         self.PARKING_DIST = routing_cfg.get("parking_dist", 1)
+        self.rydberg_radius = float(hw.get("rydberg_radius_um", 5.0))
 
         self.stg_slm_sites = stg_sites
         self.ent_slm_sites = ent_sites
@@ -79,16 +81,30 @@ class Router:
         })
         self.total_duration += self.time_2q
 
-    def _emit_crosstalk(self, idle_qs: list[int]):
+    def _emit_crosstalk(self, idle_qs: list[int],
+                         active_qs: list[int] | None = None):
         if not idle_qs:
             return
         locs = [{"id": q, "x": self.current_mapping[q][0],
                  "y": self.current_mapping[q][1]} for q in idle_qs]
+        # Distance-weighted crosstalk: van der Waals Rydberg interaction ~1/r^6
+        if active_qs:
+            active_locs = [self.current_mapping[q] for q in active_qs]
+            xtalk_weight = 0.0
+            for q in idle_qs:
+                idle_loc = self.current_mapping[q]
+                min_d = min(math.dist(idle_loc, al) for al in active_locs)
+                # w(d) = 1 / (1 + (d/R_blockade)^6) — w→1 at d=0, w→0 at d→∞
+                xtalk_weight += 1.0 / (1.0 + (min_d / self.rydberg_radius) ** 6)
+        else:
+            # Backward-compatible: no active qubits → weight = count
+            xtalk_weight = float(len(idle_qs))
         self.instructions.append({
             "type": "Crosstalk",
             "qs": idle_qs,
             "duration": [self.time_2q] * len(idle_qs),
             "locs": locs,
+            "xtalk_weight": xtalk_weight,
         })
 
     def _emit_activate(self, qs: list[int]):
@@ -330,6 +346,6 @@ class Router:
                         if q not in busy
                         and self.current_mapping[q] in self.ent_slm_sites
                         and self.current_mapping[q][1] >= edge]
-                self._emit_crosstalk(idle)
+                self._emit_crosstalk(idle, list(busy))
 
         return self.instructions
